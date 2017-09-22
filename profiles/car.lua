@@ -302,7 +302,7 @@ function process_node(profile, node, result)
   end
 end
 
-function process_way(profile, way, result, relations, location_data)
+function process_way(profile, way, result, relations)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -386,8 +386,7 @@ function process_way(profile, way, result, relations, location_data)
     WayHandlers.weights
   }
 
-  print (profile, way, result, data, handlers, relations, location_data)
-  WayHandlers.run(profile, way, result, data, handlers, relations, location_data)
+  WayHandlers.run(profile, way, result, data, handlers, relations)
 end
 
 function process_turn(profile, turn)

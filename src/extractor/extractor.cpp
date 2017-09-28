@@ -525,8 +525,7 @@ void Extractor::FindComponents(unsigned max_edge_id,
         const auto forward_component = component_search.GetComponentID(node_id);
         const auto component_size = component_search.GetComponentSize(forward_component);
         const auto is_tiny = component_size < config.small_component_size;
-        // TODO set components within data of edge-based-graph
-        //nodes_container.SetComponentID(node_id, {1 + forward_component, is_tiny});
+        nodes_container.nodes[node_id].component_id = {1 + forward_component, is_tiny};
     }
 }
 

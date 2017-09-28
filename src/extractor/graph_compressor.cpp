@@ -145,8 +145,8 @@ void GraphCompressor::Compress(
                 continue;
             }
 
-            if (fwd_edge_data1.flags.CanCombineWith(fwd_edge_data2.flags) &&
-                rev_edge_data1.flags.CanCombineWith(rev_edge_data2.flags) &&
+            if ((fwd_edge_data1.flags == fwd_edge_data2.flags) &&
+                (rev_edge_data1.flags == rev_edge_data2.flags) &&
                 fwd_annotation_data1.CanCombineWith(fwd_annotation_data2) &&
                 rev_annotation_data1.CanCombineWith(rev_annotation_data2))
             {

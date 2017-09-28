@@ -44,7 +44,7 @@ struct NodeBasedEdgeClassification
     {
     }
 
-    bool CanCombineWith(const NodeBasedEdgeClassification &other) const
+    bool operator==(const NodeBasedEdgeClassification &other) const
     {
         return (road_classification == other.road_classification) && (forward == other.forward) &&
                (backward == other.backward) && (is_split) == (other.is_split) &&

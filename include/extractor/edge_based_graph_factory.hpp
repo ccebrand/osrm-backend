@@ -25,7 +25,6 @@
 #include "util/guidance/entry_class.hpp"
 #include "util/name_table.hpp"
 #include "util/node_based_graph.hpp"
-#include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
 #include "storage/io.hpp"

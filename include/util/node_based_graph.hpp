@@ -21,7 +21,7 @@ namespace util
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), geometry_id({0,false}),
+        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), geometry_id({0, false}),
           reversed(false), annotation_data(-1)
     {
     }
@@ -32,8 +32,8 @@ struct NodeBasedEdgeData
                       bool reversed,
                       extractor::NodeBasedEdgeClassification flags,
                       AnnotationID annotation_data)
-        : weight(weight), duration(duration), geometry_id(geometry_id), reversed(reversed), flags(flags),
-          annotation_data(annotation_data)
+        : weight(weight), duration(duration), geometry_id(geometry_id), reversed(reversed),
+          flags(flags), annotation_data(annotation_data)
     {
     }
 
@@ -43,23 +43,35 @@ struct NodeBasedEdgeData
     bool reversed : 1;
     extractor::NodeBasedEdgeClassification flags;
     AnnotationID annotation_data;
-
-    bool IsCompatibleTo(const NodeBasedEdgeData &other) const
-    {
-        return (reversed == other.reversed) && annotation_data == other.annotation_data;
-    }
-
-    // TODO check names
-    bool CanCombineWith(const NodeBasedEdgeData &other) const { return IsCompatibleTo(other); }
 };
+
+// Check if two edge data elements can be compressed into a single edge (i.e. match in terms of
+// their meta-data).
+inline bool CanBeCompressed(const NodeBasedEdgeData &lhs,
+                     const NodeBasedEdgeData &rhs,
+                     const extractor::EdgeBasedNodeDataContainer &node_data_container,
+                     bool ignore_name)
+{
+    if (!(lhs.flags == rhs.flags))
+        return false;
+
+    auto const &lhs_annotation = node_data_container.GetAnnotation(lhs.annotation_data);
+    auto const &rhs_annotation = node_data_container.GetAnnotation(rhs.annotation_data);
+
+    if (lhs_annotation.travel_mode != rhs_annotation.travel_mode)
+        return false;
+
+    if (lhs_annotation.classes != rhs_annotation.classes)
+        return false;
+
+    return ignore_name || (lhs_annotation.name_id == rhs_annotation.name_id);
+}
 
 using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 
 /// Factory method to create NodeBasedDynamicGraph from NodeBasedEdges
 /// Since DynamicGraph expects directed edges, we need to insert
 /// two edges for undirected edges.
-// inline std::pair<std::shared_ptr<NodeBasedDynamicGraph>,
-//                 std::shared_ptr<extractor::EdgeBasedNodeDataContainer>>
 inline std::shared_ptr<NodeBasedDynamicGraph>
 NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
                                const std::vector<extractor::NodeBasedEdge> &input_edge_list)
@@ -81,9 +93,6 @@ NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
 
     auto graph = std::make_shared<NodeBasedDynamicGraph>(number_of_nodes, edges_list);
     return graph;
-    //   auto graph_meta_data = std::make_shared<extractor::EdgeBasedNodeDataContainer>(edges_list);
-
-    //   return std::make_pair(graph, graph_meta_data);
 }
 }
 }

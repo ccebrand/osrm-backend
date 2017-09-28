@@ -258,7 +258,7 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 {
     // heuristic: node-based graph node is a simple intersection with four edges (edge-based nodes)
     m_edge_based_node_weights.reserve(4 * m_node_based_graph->GetNumberOfNodes());
-    nbe_to_ebn_mapping.resize(m_node_based_graph->GetNumberOfEdges(), SPECIAL_NODEID);
+    nbe_to_ebn_mapping.resize(m_node_based_graph->GetEdgeCapacity(), SPECIAL_NODEID);
 
     // renumber edge based node of outgoing edges
     unsigned numbered_edges_count = 0;

@@ -96,7 +96,7 @@ void NodeBasedGraphFactory::CompressGeometry()
 
             auto from = nbg_node_u, to = nbg_node_v;
             // if we found a non-forward edge reverse and try again
-            if (!nbg_edge_data.flags.forward)
+            if (nbg_edge_data.reversed)
                 std::swap(from, to);
 
             // find forward edge id and

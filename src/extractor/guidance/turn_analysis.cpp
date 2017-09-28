@@ -21,11 +21,6 @@ namespace guidance
 
 using EdgeData = util::NodeBasedDynamicGraph::EdgeData;
 
-bool requiresAnnouncement(const EdgeData &from, const EdgeData &to)
-{
-    return !from.CanCombineWith(to);
-}
-
 TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const EdgeBasedNodeDataContainer &node_data_container,
                            const std::vector<util::Coordinate> &coordinates,
@@ -37,7 +32,7 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const ProfileProperties &profile_properties)
     : node_based_graph(node_based_graph), 
       intersection_generator(
-          node_based_graph, restriction_map, barrier_nodes, coordinates, compressed_edge_container),
+          node_based_graph, node_data_container, restriction_map, barrier_nodes, coordinates, compressed_edge_container),
       intersection_normalizer(node_based_graph,
                               node_data_container,
                               coordinates,

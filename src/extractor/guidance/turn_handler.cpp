@@ -177,11 +177,9 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
                                  const ConnectedRoad &other) const
 {
     const auto &via_data =
-        node_data_container[node_based_graph.GetEdgeData(via_edge).annotation_data];
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
     const auto &road_data =
-        node_data_container[node_based_graph.GetEdgeData(road.eid).annotation_data];
-    const auto &other_data =
-        node_data_container[node_based_graph.GetEdgeData(other.eid).annotation_data];
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
     const auto &via_classification =
         node_based_graph.GetEdgeData(via_edge).flags.road_classification;
     const auto &road_classification =
@@ -679,9 +677,9 @@ boost::optional<TurnHandler::Fork> TurnHandler::findFork(const EdgeID via_edge,
 
         const auto has_compatible_modes =
             std::all_of(fork->begin, fork->end, [&](const auto &road) {
-                return node_data_container[node_based_graph.GetEdgeData(road.eid).annotation_data]
+                return node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
                            .travel_mode ==
-                       node_data_container[node_based_graph.GetEdgeData(via_edge).annotation_data]
+                       node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
                            .travel_mode;
             });
 

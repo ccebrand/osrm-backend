@@ -82,7 +82,6 @@ class TurnAnalysis
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const EdgeBasedNodeDataContainer &node_data_container;
     const IntersectionGenerator intersection_generator;
     const IntersectionNormalizer intersection_normalizer;
     const RoundaboutHandler roundabout_handler;

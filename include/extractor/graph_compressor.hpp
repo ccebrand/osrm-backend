@@ -29,7 +29,7 @@ class GraphCompressor
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<ConditionalTurnRestriction> &conditional_turn_restrictions,
                   util::NodeBasedDynamicGraph &graph,
-                  const EdgeBasedNodeDataContainer &node_data_container,
+                  const std::vector<NodeBasedEdgeAnnotation> &node_data_container,
                   CompressedEdgeContainer &geometry_compressor);
 
   private:

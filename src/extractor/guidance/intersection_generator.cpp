@@ -33,14 +33,13 @@ const constexpr bool USE_HIGH_PRECISION_MODE = !USE_LOW_PRECISION_MODE;
 
 IntersectionGenerator::IntersectionGenerator(
     const util::NodeBasedDynamicGraph &node_based_graph,
-    const EdgeBasedNodeDataContainer &node_data_container,
     const RestrictionMap &restriction_map,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::vector<util::Coordinate> &coordinates,
     const CompressedEdgeContainer &compressed_edge_container)
     : node_based_graph(node_based_graph), restriction_map(restriction_map),
       barrier_nodes(barrier_nodes), coordinates(coordinates),
-      coordinate_extractor(node_based_graph, node_data_container, compressed_edge_container, coordinates)
+      coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
 {
 }
 

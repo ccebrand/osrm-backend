@@ -1,8 +1,9 @@
 #ifndef OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 #define OSRM_EXTRACTOR_NODE_DATA_CONTAINER_HPP
 
-#include "extractor/node_based_edge.hpp"
 #include "extractor/class_data.hpp"
+#include "extractor/edge_based_node.hpp"
+#include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include "storage/io_fwd.hpp"
@@ -16,6 +17,10 @@ namespace osrm
 {
 namespace extractor
 {
+
+class Extractor;
+class EdgeBasedGraphFactory;
+
 namespace detail
 {
 template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl;
@@ -39,51 +44,43 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
     using TravelMode = extractor::TravelMode;
 
+    // to fill in data on edgeBasedNodes
+    friend class osrm::extractor::Extractor;
+    friend class osrm::extractor::EdgeBasedGraphFactory;
+
   public:
     EdgeBasedNodeDataContainerImpl() = default;
 
-    EdgeBasedNodeDataContainerImpl(std::size_t size)
-        : data(size)
+    EdgeBasedNodeDataContainerImpl(const NodeID number_of_edge_based_nodes,
+                                   const AnnotationID number_of_annotations)
+        : nodes(number_of_edge_based_nodes), annotation_data(number_of_annotations)
     {
     }
 
-    EdgeBasedNodeDataContainerImpl(Vector<NodeBasedEdgeAnnotation> data)
-        : data(std::move(data))
+    EdgeBasedNodeDataContainerImpl(Vector<EdgeBasedNode> nodes,
+                                   Vector<NodeBasedEdgeAnnotation> annotation_data)
+        : nodes(std::move(nodes)), annotation_data(std::move(annotation_data))
     {
     }
 
-    GeometryID GetGeometryID(const NodeID node_id) const { return {0,true}; }
+    GeometryID GetGeometryID(const NodeID node_id) const { return nodes[node_id].geometry_id; }
 
-    ComponentID GetComponentID(const NodeID node_id) const { return {0,false}; } //component_ids[node_id]; }
+    ComponentID GetComponentID(const NodeID node_id) const { return nodes[node_id].component_id; }
 
-    TravelMode GetTravelMode(const AnnotationID node_id) const { return data[node_id].travel_mode; }
-
-    NameID GetNameID(const AnnotationID node_id) const { return data[node_id].name_id; }
-
-    ClassData GetClassData(const AnnotationID node_id) const { return data[node_id].classes; }
-
-    /*
-    // Used by EdgeBasedGraphFactory to fill data structure
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void SetData(NodeID node_id,
-                 GeometryID geometry_id,
-                 NameID name_id,
-                 TravelMode travel_mode,
-                 ClassData class_data)
+    TravelMode GetTravelMode(const NodeID node_id) const
     {
-        geometry_ids[node_id] = geometry_id;
-        name_ids[node_id] = name_id;
-        travel_modes[node_id] = travel_mode;
-        classes[node_id] = class_data;
+        return annotation_data[nodes[node_id].annotation_id].travel_mode;
     }
 
-    // Used by EdgeBasedGraphFactory to fill data structure
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
-    void SetComponentID(NodeID node_id, ComponentID component_id)
+    NameID GetNameID(const NodeID node_id) const
     {
-        component_ids[node_id] = component_id;
+        return annotation_data[nodes[node_id].annotation_id].name_id;
     }
-    */
+
+    ClassData GetClassData(const NodeID node_id) const
+    {
+        return annotation_data[nodes[node_id].annotation_id].classes;
+    }
 
     friend void serialization::read<Ownership>(storage::io::FileReader &reader,
                                                EdgeBasedNodeDataContainerImpl &ebn_data_container);
@@ -94,36 +91,30 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void Renumber(const std::vector<std::uint32_t> &permutation)
     {
-        //util::inplacePermutation(geometry_ids.begin(), geometry_ids.end(), permutation);
-        //util::inplacePermutation(name_ids.begin(), name_ids.end(), permutation);
-        //util::inplacePermutation(component_ids.begin(), component_ids.end(), permutation);
-        //util::inplacePermutation(travel_modes.begin(), travel_modes.end(), permutation);
-        //util::inplacePermutation(classes.begin(), classes.end(), permutation);
-        //util::inplacePermutation(data.begin(), data.end(), permutation);
+        util::inplacePermutation(nodes.begin(), nodes.end(), permutation);
     }
 
-    // all containers have the exact same size
-    std::size_t Size() const
+    NodeID NumberOfNodes() const { return nodes.size(); }
+
+    // the number of annotations differs from the number of nodes, since annotations can be shared
+    // between a large set of nodes
+    AnnotationID NumberOfAnnotations() const { return annotation_data.size(); }
+
+    EdgeBasedNode &GetNode(const NodeID node_id) { return nodes[node_id]; }
+    EdgeBasedNode const &GetNode(const NodeID node_id) const { return nodes[node_id]; }
+
+    NodeBasedEdgeAnnotation &GetAnnotation(const AnnotationID annotation)
     {
-        //BOOST_ASSERT(geometry_ids.size() == name_ids.size());
-        //BOOST_ASSERT(geometry_ids.size() == component_ids.size());
-        //BOOST_ASSERT(geometry_ids.size() == travel_modes.size());
-        //BOOST_ASSERT(geometry_ids.size() == classes.size());
-        return data.size();
+        return annotation_data[annotation];
     }
-
-    // access the shared data of a set of nodes
-    NodeBasedEdgeAnnotation operator[](const EdgeID eid) const{
-        return data[eid];
+    NodeBasedEdgeAnnotation const &GetAnnotation(const AnnotationID annotation) const
+    {
+        return annotation_data[annotation];
     }
 
   private:
-    //Vector<GeometryID> geometry_ids;
-    //Vector<NameID> name_ids;
-    //Vector<ComponentID> component_ids;
-    //Vector<TravelMode> travel_modes;
-    //Vector<ClassData> classes;
-    Vector<NodeBasedEdgeAnnotation> data;
+    Vector<EdgeBasedNode> nodes;
+    Vector<NodeBasedEdgeAnnotation> annotation_data;
 };
 }
 

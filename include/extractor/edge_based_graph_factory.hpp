@@ -71,7 +71,7 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
     explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-                                   EdgeBasedNodeDataContainer const &node_data_container,
+                                   EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
                                    const std::unordered_set<NodeID> &traffic_lights,
@@ -142,7 +142,7 @@ class EdgeBasedGraphFactory
 
     //! list of edge based nodes (compressed segments)
     std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
-    EdgeBasedNodeDataContainer const &m_edge_based_node_container;
+    EdgeBasedNodeDataContainer &m_edge_based_node_container;
     util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
 
     // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.
@@ -164,7 +164,11 @@ class EdgeBasedGraphFactory
     const util::NameTable &name_table;
     guidance::LaneDescriptionMap &lane_description_map;
 
-    unsigned RenumberEdges();
+    // In the edge based graph, any traversable (non reversed) edge of the node-based graph forms a
+    // node of the edge-based graph. To be able to name these nodes, we loop over the node-based
+    // graph and create a mapping from edges (node-based) to nodes (edge-based). The mapping is
+    // essentially a prefix-sum over all previous non-reversed edges of the node-based graph.
+    unsigned LabelEdgeBasedNodes();
 
     // During the generation of the edge-expanded nodes, we need to also generate duplicates that
     // represent state during via-way restrictions (see
@@ -191,6 +195,8 @@ class EdgeBasedGraphFactory
     std::size_t skipped_uturns_counter;
     std::size_t skipped_barrier_turns_counter;
 
+    // mapping of node-based edges to edge-based nodes
+    std::vector<NodeID> nbe_to_ebn_mapping;
     util::ConcurrentIDMap<util::guidance::BearingClass, BearingClassID> bearing_class_hash;
     std::vector<BearingClassID> bearing_class_by_node_based_node;
     util::ConcurrentIDMap<util::guidance::EntryClass, EntryClassID> entry_class_hash;

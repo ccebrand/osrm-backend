@@ -39,7 +39,7 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
                           intersection_generator),
       compressed_edge_container(compressed_edge_container), profile_properties(profile_properties),
       coordinate_extractor(
-          node_based_graph, node_data_container, compressed_edge_container, coordinates)
+          node_based_graph, compressed_edge_container, coordinates)
 {
 }
 
@@ -285,7 +285,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         for (const auto edge_id : node_based_graph.GetAdjacentEdgeRange(node))
         {
             const auto &edge = node_based_graph.GetEdgeData(edge_id);
-            const auto &edge_data = node_data_container[edge.annotation_data];
+            const auto &edge_data = node_data_container.GetAnnotation(edge.annotation_data);
             if (!edge.reversed && (edge.flags.circular == circular) &&
                 (edge.flags.roundabout == roundabout))
             {

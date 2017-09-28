@@ -22,7 +22,6 @@ class CoordinateExtractor
 {
   public:
     CoordinateExtractor(const util::NodeBasedDynamicGraph &node_based_graph,
-                        const EdgeBasedNodeDataContainer &node_data_container,
                         const extractor::CompressedEdgeContainer &compressed_geometries,
                         const std::vector<util::Coordinate> &node_coordinates);
 
@@ -164,7 +163,6 @@ class CoordinateExtractor
 
   private:
     const util::NodeBasedDynamicGraph &node_based_graph;
-    const EdgeBasedNodeDataContainer &node_data_container;
     const extractor::CompressedEdgeContainer &compressed_geometries;
     const std::vector<util::Coordinate> &node_coordinates;
 

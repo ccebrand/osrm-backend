@@ -15,8 +15,6 @@ namespace osrm
 namespace extractor
 {
 
-using AnnotationID = std::uint32_t;
-
 // Flags describing the class of the road. This data is used during creation of graphs/guidance
 // generation but is not available in annotation/navigation
 struct NodeBasedEdgeClassification

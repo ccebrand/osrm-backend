@@ -61,7 +61,7 @@ namespace extractor
 // Configuration to find representative candidate for turn angle calculations
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
-    EdgeBasedNodeDataContainer const &node_data_container,
+    EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
     const std::unordered_set<NodeID> &traffic_lights,
@@ -70,9 +70,9 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const util::NameTable &name_table,
     guidance::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_number_of_edge_based_nodes(0),
-      m_coordinates(coordinates),
-      m_node_based_graph(std::move(node_based_graph)), m_barrier_nodes(barrier_nodes),
-      m_traffic_lights(traffic_lights), m_compressed_edge_container(compressed_edge_container),
+      m_coordinates(coordinates), m_node_based_graph(std::move(node_based_graph)),
+      m_barrier_nodes(barrier_nodes), m_traffic_lights(traffic_lights),
+      m_compressed_edge_container(compressed_edge_container),
       profile_properties(std::move(profile_properties)), name_table(name_table),
       lane_description_map(lane_description_map)
 {
@@ -127,10 +127,12 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 
     const EdgeData &reverse_data = m_node_based_graph->GetEdgeData(edge_id_2);
 
-    BOOST_ASSERT(forward_data.edge_id != SPECIAL_NODEID || reverse_data.edge_id != SPECIAL_NODEID);
+    BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID ||
+                 nbe_to_ebn_mapping[edge_id_2] != SPECIAL_NODEID);
 
-    if (forward_data.edge_id != SPECIAL_NODEID && reverse_data.edge_id == SPECIAL_NODEID)
-        m_edge_based_node_weights[forward_data.edge_id] = INVALID_EDGE_WEIGHT;
+    if (nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID &&
+        nbe_to_ebn_mapping[edge_id_2] == SPECIAL_NODEID)
+        m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] = INVALID_EDGE_WEIGHT;
 
     BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
                  m_compressed_edge_container.HasEntryForID(edge_id_2));
@@ -144,7 +146,8 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     // There should always be some geometry
     BOOST_ASSERT(0 != segment_count);
 
-    //const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
+    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
+    // edge_id_2);
 
     NodeID current_edge_source_coordinate_id = node_u;
 
@@ -158,22 +161,17 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     };
 
     // Add edge-based node data for forward and reverse nodes indexed by edge_id
-    BOOST_ASSERT(forward_data.edge_id != SPECIAL_EDGEID);
-/*
-    m_edge_based_node_container.SetData(forward_data.edge_id,
-                                        GeometryID{packed_geometry_id, true},
-                                        forward_data.name_id,
-                                        forward_data.travel_mode,
-                                        forward_data.classes);
-    if (reverse_data.edge_id != SPECIAL_EDGEID)
+    BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_EDGEID);
+    m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].geometry_id = forward_data.geometry_id;
+    m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].annotation_id =
+        forward_data.annotation_data;
+    if (nbe_to_ebn_mapping[edge_id_2] != SPECIAL_EDGEID)
     {
-        m_edge_based_node_container.SetData(reverse_data.edge_id,
-                                            GeometryID{packed_geometry_id, false},
-                                            reverse_data.name_id,
-                                            reverse_data.travel_mode,
-                                            reverse_data.classes);
+        m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].geometry_id =
+            reverse_data.geometry_id;
+        m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_2]].annotation_id =
+            reverse_data.annotation_data;
     }
-*/
     // Add segments of edge-based nodes
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
@@ -190,20 +188,21 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
         // build edges
-        m_edge_based_node_segments.emplace_back(edge_id_to_segment_id(forward_data.annotation_data),
-                                                edge_id_to_segment_id(reverse_data.annotation_data),
-                                                current_edge_source_coordinate_id,
-                                                current_edge_target_coordinate_id,
-                                                i);
+        m_edge_based_node_segments.emplace_back(
+            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_1]),
+            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
+            current_edge_source_coordinate_id,
+            current_edge_target_coordinate_id,
+            i);
 
-        m_edge_based_node_is_startpoint.push_back(
-            forward_data.flags.startpoint || reverse_data.flags.startpoint);
+        m_edge_based_node_is_startpoint.push_back(forward_data.flags.startpoint ||
+                                                  reverse_data.flags.startpoint);
         current_edge_source_coordinate_id = current_edge_target_coordinate_id;
     }
 
     BOOST_ASSERT(current_edge_source_coordinate_id == node_v);
 
-    return NBGToEBG{node_u, node_v, forward_data.annotation_data, reverse_data.annotation_data};
+    return NBGToEBG{node_u, node_v, nbe_to_ebn_mapping[edge_id_1], nbe_to_ebn_mapping[edge_id_2]};
 }
 
 void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
@@ -219,8 +218,11 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
                                 const WayRestrictionMap &way_restriction_map)
 {
     TIMER_START(renumber);
-    m_number_of_edge_based_nodes = RenumberEdges() + way_restriction_map.NumberOfDuplicatedNodes();
+    m_number_of_edge_based_nodes =
+        LabelEdgeBasedNodes() + way_restriction_map.NumberOfDuplicatedNodes();
     TIMER_STOP(renumber);
+
+    m_edge_based_node_container.nodes.resize(m_number_of_edge_based_nodes);
 
     TIMER_START(generate_nodes);
     {
@@ -252,10 +254,11 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 /// Renumbers all _forward_ edges and sets the edge_id.
 /// A specific numbering is not important. Any unique ID will do.
 /// Returns the number of edge-based nodes.
-unsigned EdgeBasedGraphFactory::RenumberEdges()
+unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 {
     // heuristic: node-based graph node is a simple intersection with four edges (edge-based nodes)
     m_edge_based_node_weights.reserve(4 * m_node_based_graph->GetNumberOfNodes());
+    nbe_to_ebn_mapping.resize(m_node_based_graph->GetNumberOfEdges(), SPECIAL_NODEID);
 
     // renumber edge based node of outgoing edges
     unsigned numbered_edges_count = 0;
@@ -264,7 +267,6 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
         for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
         {
             EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
-
             // only number incoming edges
             if (edge_data.reversed)
             {
@@ -274,10 +276,8 @@ unsigned EdgeBasedGraphFactory::RenumberEdges()
             m_edge_based_node_weights.push_back(edge_data.weight);
 
             BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
-            edge_data.edge_id = numbered_edges_count;
+            nbe_to_ebn_mapping[current_edge] = numbered_edges_count;
             ++numbered_edges_count;
-
-            BOOST_ASSERT(SPECIAL_NODEID != edge_data.edge_id);
         }
     }
 
@@ -293,7 +293,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
     // Allocate memory for edge-based nodes
     // In addition to the normal edges, allocate enough space for copied edges from
     // via-way-restrictions
-    //m_edge_based_node_container = EdgeBasedNodeDataContainer(m_number_of_edge_based_nodes);
+    // m_edge_based_node_container = EdgeBasedNodeDataContainer(m_number_of_edge_based_nodes);
 
     util::Log() << "Generating edge expanded nodes ... ";
     // indicating a normal node within the edge-based graph. This node represents an edge in the
@@ -302,7 +302,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
         util::UnbufferedLog log;
         util::Percent progress(log, m_node_based_graph->GetNumberOfNodes());
 
-        //m_compressed_edge_container.InitializeBothwayVector();
+        // m_compressed_edge_container.InitializeBothwayVector();
 
         // loop over all edges and generate new set of nodes
         for (const auto nbg_node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
@@ -313,7 +313,6 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             {
                 BOOST_ASSERT(nbg_edge_id != SPECIAL_EDGEID);
 
-                const EdgeData &nbg_edge_data = m_node_based_graph->GetEdgeData(nbg_edge_id);
                 const NodeID nbg_node_v = m_node_based_graph->GetTarget(nbg_edge_id);
                 BOOST_ASSERT(nbg_node_v != SPECIAL_NODEID);
                 BOOST_ASSERT(nbg_node_u != nbg_node_v);
@@ -326,7 +325,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                 }
 
                 // if we found a non-forward edge reverse and try again
-                if (nbg_edge_data.edge_id == SPECIAL_NODEID)
+                if (nbe_to_ebn_mapping[nbg_edge_id] == SPECIAL_NODEID)
                 {
                     mapping.push_back(InsertEdgeBasedNode(nbg_node_v, nbg_node_u));
                 }
@@ -356,7 +355,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // we know that the edge exists as non-reversed edge
             const auto eid = m_node_based_graph->FindEdge(node_u, node_v);
 
-            BOOST_ASSERT(m_node_based_graph->GetEdgeData(eid).edge_id != SPECIAL_NODEID);
+            BOOST_ASSERT(nbe_to_ebn_mapping[eid] != SPECIAL_NODEID);
 
             // merge edges together into one EdgeBasedNode
             BOOST_ASSERT(node_u != SPECIAL_NODEID);
@@ -365,18 +364,9 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // find node in the edge based graph, we only require one id:
             const EdgeData &edge_data = m_node_based_graph->GetEdgeData(eid);
             // what is this ID all about? :(
-            BOOST_ASSERT(edge_data.edge_id != SPECIAL_NODEID);
-
-            //BOOST_ASSERT(edge_data.edge_id < m_edge_based_node_container.Size());
-            /*
-            m_edge_based_node_container.SetData(
-                edge_based_node_id,
-                // fetch the known geometry ID
-                m_edge_based_node_container.GetGeometryID(static_cast<NodeID>(edge_data.edge_id)),
-                edge_data.name_id,
-                edge_data.travel_mode,
-                edge_data.classes);
-            */
+            // BOOST_ASSERT(edge_data.edge_id < m_edge_based_node_container.Size());
+            m_edge_based_node_container.nodes[edge_based_node_id].geometry_id = edge_data.geometry_id;
+            m_edge_based_node_container.nodes[edge_based_node_id].annotation_id = edge_data.annotation_data;
 
             m_edge_based_node_weights.push_back(m_edge_based_node_weights[eid]);
 
@@ -567,7 +557,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             const auto &edge_data1 = m_node_based_graph->GetEdgeData(node_based_edge_from);
             const auto &edge_data2 = m_node_based_graph->GetEdgeData(node_based_edge_to);
 
-            BOOST_ASSERT(edge_data1.edge_id != edge_data2.edge_id);
+            BOOST_ASSERT(nbe_to_ebn_mapping[node_based_edge_from] !=
+                         nbe_to_ebn_mapping[node_based_edge_to]);
             BOOST_ASSERT(!edge_data1.reversed);
             BOOST_ASSERT(!edge_data2.reversed);
 
@@ -591,8 +582,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                 boost::numeric_cast<TurnPenalty>(extracted_turn.weight * weight_multiplier);
             auto duration_penalty = boost::numeric_cast<TurnPenalty>(extracted_turn.duration * 10.);
 
-            BOOST_ASSERT(SPECIAL_NODEID != edge_data1.edge_id);
-            BOOST_ASSERT(SPECIAL_NODEID != edge_data2.edge_id);
+            BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_from]);
+            BOOST_ASSERT(SPECIAL_NODEID != nbe_to_ebn_mapping[node_based_edge_to]);
 
             // auto turn_id = m_edge_based_edge_list.size();
             auto weight = boost::numeric_cast<EdgeWeight>(edge_data1.weight + weight_penalty);
@@ -740,10 +731,6 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             if (!turn.entry_allowed)
                                 continue;
 
-                            const EdgeData &edge_data1 =
-                                m_node_based_graph->GetEdgeData(incoming_edge);
-                            const EdgeData &edge_data2 = m_node_based_graph->GetEdgeData(turn.eid);
-
                             // In case a way restriction starts at a given location, add a turn onto
                             // every artificial node eminating here.
                             //
@@ -761,10 +748,11 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                             // artificial node, we simply have to find a single representative for
                             // the turn. Here we check whether the turn in question is the start of
                             // a via way restriction. If that should be the case, we switch
-                            // edge_data2.edge_id to the ID of the duplicated node associated with
-                            // the turn. (e.g. ab via bc switches bc to bc_dup)
+                            // the id of the edge-based-node for the target to the ID of the
+                            // duplicated node associated with the turn. (e.g. ab via bc switches bc
+                            // to bc_dup)
                             auto const target_id = way_restriction_map.RemapIfRestricted(
-                                edge_data2.edge_id,
+                                nbe_to_ebn_mapping[turn.eid],
                                 node_along_road_entering,
                                 node_at_center_of_intersection,
                                 m_node_based_graph->GetTarget(turn.eid),
@@ -772,7 +760,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
                             { // scope to forget edge_with_data after
                                 const auto edge_with_data_and_condition =
-                                    generate_edge(edge_data1.edge_id,
+                                    generate_edge(nbe_to_ebn_mapping[incoming_edge],
                                                   target_id,
                                                   node_along_road_entering,
                                                   incoming_edge,
@@ -834,16 +822,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                             continue;
 
                                         // add into delayed data
-                                        auto edge_with_data_and_condition = generate_edge(
-                                            NodeID(from_id),
-                                            m_node_based_graph->GetEdgeData(turn.eid).edge_id,
-                                            node_along_road_entering,
-                                            incoming_edge,
-                                            node_at_center_of_intersection,
-                                            turn.eid,
-                                            intersection,
-                                            turn,
-                                            entry_class_id);
+                                        auto edge_with_data_and_condition =
+                                            generate_edge(NodeID(from_id),
+                                                          nbe_to_ebn_mapping[turn.eid],
+                                                          node_along_road_entering,
+                                                          incoming_edge,
+                                                          node_at_center_of_intersection,
+                                                          turn.eid,
+                                                          intersection,
+                                                          turn,
+                                                          entry_class_id);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));
@@ -860,7 +848,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                             // add a new conditional for the edge we just created
                                             buffer->conditionals.push_back(
                                                 {NodeID(from_id),
-                                                 m_node_based_graph->GetEdgeData(turn.eid).edge_id,
+                                                 nbe_to_ebn_mapping[turn.eid],
                                                  {static_cast<std::uint64_t>(-1),
                                                   m_coordinates[node_at_center_of_intersection],
                                                   restriction.condition}});
@@ -868,16 +856,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                     }
                                     else
                                     {
-                                        auto edge_with_data_and_condition = generate_edge(
-                                            NodeID(from_id),
-                                            m_node_based_graph->GetEdgeData(turn.eid).edge_id,
-                                            node_along_road_entering,
-                                            incoming_edge,
-                                            node_at_center_of_intersection,
-                                            turn.eid,
-                                            intersection,
-                                            turn,
-                                            entry_class_id);
+                                        auto edge_with_data_and_condition =
+                                            generate_edge(NodeID(from_id),
+                                                          nbe_to_ebn_mapping[turn.eid],
+                                                          node_along_road_entering,
+                                                          incoming_edge,
+                                                          node_at_center_of_intersection,
+                                                          turn.eid,
+                                                          intersection,
+                                                          turn,
+                                                          entry_class_id);
 
                                         buffer->delayed_data.push_back(
                                             std::move(edge_with_data_and_condition.first));

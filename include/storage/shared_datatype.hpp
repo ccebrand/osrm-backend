@@ -19,6 +19,7 @@ namespace storage
 const constexpr char CANARY[4] = {'O', 'S', 'R', 'M'};
 
 const constexpr char *block_id_to_name[] = {"NAME_CHAR_DATA",
+                                            "EDGE_BASED_NODE_DATA",
                                             "ANNOTATION_DATA",
                                             "CH_GRAPH_NODE_LIST",
                                             "CH_GRAPH_EDGE_LIST",
@@ -102,6 +103,7 @@ struct DataLayout
     enum BlockID
     {
         NAME_CHAR_DATA = 0,
+        EDGE_BASED_NODE_DATA_LIST,
         ANNOTATION_DATA_LIST,
         CH_GRAPH_NODE_LIST,
         CH_GRAPH_EDGE_LIST,

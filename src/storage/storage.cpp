@@ -22,6 +22,7 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
+#include "extractor/edge_based_node.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
@@ -253,7 +254,9 @@ void Storage::PopulateLayout(DataLayout &layout)
         io::FileReader nodes_data_file(config.GetPath(".osrm.ebg_nodes"),
                                        io::FileReader::VerifyFingerprint);
         const auto nodes_number = nodes_data_file.ReadElementCount64();
-        layout.SetBlockSize<extractor::NodeBasedEdgeAnnotation>(DataLayout::ANNOTATION_DATA_LIST, nodes_number);
+        const auto annotations_number = nodes_data_file.ReadElementCount64();
+        layout.SetBlockSize<extractor::EdgeBasedNode>(DataLayout::EDGE_BASED_NODE_DATA_LIST, nodes_number);
+        layout.SetBlockSize<extractor::NodeBasedEdgeAnnotation>(DataLayout::ANNOTATION_DATA_LIST, annotations_number);
     }
 
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
@@ -703,39 +706,18 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
 
     // Load edge-based nodes data
     {
-        /*
-        auto geometry_id_list_ptr =
-            layout.GetBlockPtr<GeometryID, true>(memory_ptr, storage::DataLayout::GEOMETRY_ID_LIST);
-        util::vector_view<GeometryID> geometry_ids(
-            geometry_id_list_ptr, layout.num_entries[storage::DataLayout::GEOMETRY_ID_LIST]);
+        auto edge_based_node_data_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode, true>(
+            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
+        util::vector_view<extractor::EdgeBasedNode> edge_based_node_data(
+            edge_based_node_data_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
 
-        auto name_id_list_ptr =
-            layout.GetBlockPtr<NameID, true>(memory_ptr, storage::DataLayout::NAME_ID_LIST);
-        util::vector_view<NameID> name_ids(name_id_list_ptr,
-                                           layout.num_entries[storage::DataLayout::NAME_ID_LIST]);
-
-        auto component_ids_ptr = layout.GetBlockPtr<ComponentID, true>(
-            memory_ptr, storage::DataLayout::COMPONENT_ID_LIST);
-        util::vector_view<ComponentID> component_ids(
-            component_ids_ptr, layout.num_entries[storage::DataLayout::COMPONENT_ID_LIST]);
-
-        auto travel_mode_list_ptr = layout.GetBlockPtr<extractor::TravelMode, true>(
-            memory_ptr, storage::DataLayout::TRAVEL_MODE_LIST);
-        util::vector_view<extractor::TravelMode> travel_modes(
-            travel_mode_list_ptr, layout.num_entries[storage::DataLayout::TRAVEL_MODE_LIST]);
-
-        auto classes_list_ptr = layout.GetBlockPtr<extractor::ClassData, true>(
-            memory_ptr, storage::DataLayout::CLASSES_LIST);
-        util::vector_view<extractor::ClassData> classes(
-            classes_list_ptr, layout.num_entries[storage::DataLayout::CLASSES_LIST]);
-        */
 
         auto annotation_data_list_ptr = layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation, true>(
             memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
         util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
             annotation_data_list_ptr, layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
 
-        extractor::EdgeBasedNodeDataView node_data(std::move(annotation_data));
+        extractor::EdgeBasedNodeDataView node_data(std::move(edge_based_node_data), std::move(annotation_data));
 
         extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }

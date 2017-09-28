@@ -35,9 +35,9 @@ TurnAnalysis::TurnAnalysis(const util::NodeBasedDynamicGraph &node_based_graph,
                            const util::NameTable &name_table,
                            const SuffixTable &street_name_suffix_table,
                            const ProfileProperties &profile_properties)
-    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+    : node_based_graph(node_based_graph), 
       intersection_generator(
-          node_based_graph, node_data_container, restriction_map, barrier_nodes, coordinates, compressed_edge_container),
+          node_based_graph, restriction_map, barrier_nodes, coordinates, compressed_edge_container),
       intersection_normalizer(node_based_graph,
                               node_data_container,
                               coordinates,

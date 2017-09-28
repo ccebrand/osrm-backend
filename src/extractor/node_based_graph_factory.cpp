@@ -71,10 +71,6 @@ void NodeBasedGraphFactory::Compress(
     compressed_edge_container.InitializeBothwayVector();
 
     // TODO remap node-based graph shared data index / remove unused entries (from compression)
-
-    // assign geometries for all edges
-    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
-    // edge_id_2);
 }
 
 void NodeBasedGraphFactory::CompressGeometry()
@@ -107,15 +103,15 @@ void NodeBasedGraphFactory::CompressGeometry()
             const EdgeID edge_id_1 = compressed_output_graph->FindEdge(from, to);
             BOOST_ASSERT(edge_id_1 != SPECIAL_EDGEID);
 
-            const auto &forward_data = compressed_output_graph->GetEdgeData(edge_id_1);
-
             // find reverse edge id and
             const EdgeID edge_id_2 = compressed_output_graph->FindEdge(to, from);
             BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
             auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
-            // TODO assign to some edge
-            // compressed_output_graph->GetEdgeData(nbg_edge_id).geometry_id = packed_geometry_id;
+
+            // remember the geometry ID for both edges in the node-based graph
+            compressed_output_graph->GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id,true};
+            compressed_output_graph->GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,false};
         }
     }
 }

@@ -21,27 +21,28 @@ namespace util
 struct NodeBasedEdgeData
 {
     NodeBasedEdgeData()
-        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), edge_id(SPECIAL_NODEID),
+        : weight(INVALID_EDGE_WEIGHT), duration(INVALID_EDGE_WEIGHT), geometry_id({0,false}),
           reversed(false), annotation_data(-1)
     {
     }
 
     NodeBasedEdgeData(EdgeWeight weight,
                       EdgeWeight duration,
-                      unsigned edge_id,
+                      GeometryID geometry_id,
                       bool reversed,
-                      extractor::AnnotationID annotation_data)
-        : weight(weight), duration(duration), edge_id(edge_id), reversed(reversed),
+                      extractor::NodeBasedEdgeClassification flags,
+                      AnnotationID annotation_data)
+        : weight(weight), duration(duration), geometry_id(geometry_id), reversed(reversed), flags(flags),
           annotation_data(annotation_data)
     {
     }
 
     EdgeWeight weight;
     EdgeWeight duration;
-    unsigned edge_id;
+    GeometryID geometry_id;
     bool reversed : 1;
     extractor::NodeBasedEdgeClassification flags;
-    extractor::AnnotationID annotation_data;
+    AnnotationID annotation_data;
 
     bool IsCompatibleTo(const NodeBasedEdgeData &other) const
     {

@@ -59,10 +59,9 @@ double GetOffsetCorrectionFactor(const RoadClassification &road_classification)
 
 CoordinateExtractor::CoordinateExtractor(
     const util::NodeBasedDynamicGraph &node_based_graph,
-    const EdgeBasedNodeDataContainer &node_data_container,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const std::vector<util::Coordinate> &node_coordinates)
-    : node_based_graph(node_based_graph), node_data_container(node_data_container),
+    : node_based_graph(node_based_graph),
       compressed_geometries(compressed_geometries), node_coordinates(node_coordinates)
 {
 }

@@ -147,6 +147,7 @@ void GraphCompressor::Compress(
 
             if ((fwd_edge_data1.flags == fwd_edge_data2.flags) &&
                 (rev_edge_data1.flags == rev_edge_data2.flags) &&
+                // annotations need to match, except for the lane-id which can differ
                 fwd_annotation_data1.CanCombineWith(fwd_annotation_data2) &&
                 rev_annotation_data1.CanCombineWith(rev_annotation_data2))
             {
@@ -177,27 +178,27 @@ void GraphCompressor::Compress(
                  * just
                  * like a barrier.
                  */
-                const auto selectLaneID = [](const LaneDescriptionID front,
-                                             const LaneDescriptionID back) {
+                const auto selectAnnotation = [&node_data_container](
+                    const AnnotationID front_annotation, const AnnotationID back_annotation) {
                     // A lane has tags: u - (front) - v - (back) - w
                     // During contraction, we keep only one of the tags. Usually the one closer to
-                    // the intersection is preferred. If its empty, however, we keep the non-empty one
-                    if (back == INVALID_LANE_DESCRIPTIONID)
-                        return front;
-                    return back;
+                    // the intersection is preferred. If its empty, however, we keep the non-empty
+                    // one
+                    if (node_data_container[back_annotation].lane_description_id ==
+                        INVALID_LANE_DESCRIPTIONID)
+                        return front_annotation;
+                    return back_annotation;
                 };
 
                 // TODO set the correct shared lane data id
-                /*
-                graph.GetEdgeData(forward_e1).lane_description_id = selectLaneID(
-                    fwd_annotation_data1.lane_description_id, fwd_annotation_data2.lane_description_id);
-                graph.GetEdgeData(reverse_e1).lane_description_id = selectLaneID(
-                    rev_annotation_data1.lane_description_id, rev_annotation_data2.lane_description_id);
-                graph.GetEdgeData(forward_e2).lane_description_id = selectLaneID(
-                    fwd_annotation_data2.lane_description_id, fwd_annotation_data1.lane_description_id);
-                graph.GetEdgeData(reverse_e2).lane_description_id = selectLaneID(
-                    rev_annotation_data2.lane_description_id, rev_annotation_data1.lane_description_id);
-                */
+                graph.GetEdgeData(forward_e1).annotation_data = selectAnnotation(
+                    fwd_edge_data1.annotation_data, fwd_edge_data2.annotation_data);
+                graph.GetEdgeData(reverse_e1).annotation_data = selectAnnotation(
+                    rev_edge_data1.annotation_data, rev_edge_data2.annotation_data);
+                graph.GetEdgeData(forward_e2).annotation_data = selectAnnotation(
+                    fwd_edge_data2.annotation_data, fwd_edge_data1.annotation_data);
+                graph.GetEdgeData(reverse_e2).annotation_data = selectAnnotation(
+                    rev_edge_data2.annotation_data, rev_edge_data1.annotation_data);
 
                 /*
                 // Do not compress edge if it crosses a traffic signal.

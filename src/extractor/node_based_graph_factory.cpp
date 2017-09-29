@@ -63,7 +63,7 @@ void NodeBasedGraphFactory::Compress(
                               scripting_environment,
                               turn_restrictions,
                               conditional_turn_restrictions,
-                              *compressed_output_graph,
+                              compressed_output_graph,
                               annotation_data,
                               compressed_edge_container);
 
@@ -75,15 +75,15 @@ void NodeBasedGraphFactory::Compress(
 
 void NodeBasedGraphFactory::CompressGeometry()
 {
-    for (const auto nbg_node_u : util::irange(0u, compressed_output_graph->GetNumberOfNodes()))
+    for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
     {
         BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
-        for (EdgeID nbg_edge_id : compressed_output_graph->GetAdjacentEdgeRange(nbg_node_u))
+        for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
         {
             BOOST_ASSERT(nbg_edge_id != SPECIAL_EDGEID);
 
-            const auto &nbg_edge_data = compressed_output_graph->GetEdgeData(nbg_edge_id);
-            const auto nbg_node_v = compressed_output_graph->GetTarget(nbg_edge_id);
+            const auto &nbg_edge_data = compressed_output_graph.GetEdgeData(nbg_edge_id);
+            const auto nbg_node_v = compressed_output_graph.GetTarget(nbg_edge_id);
             BOOST_ASSERT(nbg_node_v != SPECIAL_NODEID);
             BOOST_ASSERT(nbg_node_u != nbg_node_v);
 
@@ -100,18 +100,18 @@ void NodeBasedGraphFactory::CompressGeometry()
                 std::swap(from, to);
 
             // find forward edge id and
-            const EdgeID edge_id_1 = compressed_output_graph->FindEdge(from, to);
+            const EdgeID edge_id_1 = compressed_output_graph.FindEdge(from, to);
             BOOST_ASSERT(edge_id_1 != SPECIAL_EDGEID);
 
             // find reverse edge id and
-            const EdgeID edge_id_2 = compressed_output_graph->FindEdge(to, from);
+            const EdgeID edge_id_2 = compressed_output_graph.FindEdge(to, from);
             BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
             auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
 
             // remember the geometry ID for both edges in the node-based graph
-            compressed_output_graph->GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id,true};
-            compressed_output_graph->GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,false};
+            compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id,true};
+            compressed_output_graph.GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,false};
         }
     }
 }

@@ -69,7 +69,7 @@ class EdgeBasedGraphFactory
     EdgeBasedGraphFactory(const EdgeBasedGraphFactory &) = delete;
     EdgeBasedGraphFactory &operator=(const EdgeBasedGraphFactory &) = delete;
 
-    explicit EdgeBasedGraphFactory(std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
+    explicit EdgeBasedGraphFactory(const util::NodeBasedDynamicGraph &node_based_graph,
                                    EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::unordered_set<NodeID> &barrier_nodes,
@@ -152,7 +152,7 @@ class EdgeBasedGraphFactory
     std::uint64_t m_number_of_edge_based_nodes;
 
     const std::vector<util::Coordinate> &m_coordinates;
-    std::shared_ptr<util::NodeBasedDynamicGraph> m_node_based_graph;
+    util::NodeBasedDynamicGraph m_node_based_graph;
 
     const std::unordered_set<NodeID> &m_barrier_nodes;
     const std::unordered_set<NodeID> &m_traffic_lights;

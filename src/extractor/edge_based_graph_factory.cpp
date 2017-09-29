@@ -60,7 +60,7 @@ namespace extractor
 
 // Configuration to find representative candidate for turn angle calculations
 EdgeBasedGraphFactory::EdgeBasedGraphFactory(
-    std::shared_ptr<util::NodeBasedDynamicGraph> node_based_graph,
+    const util::NodeBasedDynamicGraph &node_based_graph,
     EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::unordered_set<NodeID> &barrier_nodes,
@@ -116,16 +116,16 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     BOOST_ASSERT(node_v != SPECIAL_NODEID);
 
     // find forward edge id and
-    const EdgeID edge_id_1 = m_node_based_graph->FindEdge(node_u, node_v);
+    const EdgeID edge_id_1 = m_node_based_graph.FindEdge(node_u, node_v);
     BOOST_ASSERT(edge_id_1 != SPECIAL_EDGEID);
 
-    const EdgeData &forward_data = m_node_based_graph->GetEdgeData(edge_id_1);
+    const EdgeData &forward_data = m_node_based_graph.GetEdgeData(edge_id_1);
 
     // find reverse edge id and
-    const EdgeID edge_id_2 = m_node_based_graph->FindEdge(node_v, node_u);
+    const EdgeID edge_id_2 = m_node_based_graph.FindEdge(node_v, node_u);
     BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
-    const EdgeData &reverse_data = m_node_based_graph->GetEdgeData(edge_id_2);
+    const EdgeData &reverse_data = m_node_based_graph.GetEdgeData(edge_id_2);
 
     BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_NODEID ||
                  nbe_to_ebn_mapping[edge_id_2] != SPECIAL_NODEID);
@@ -222,6 +222,7 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
         LabelEdgeBasedNodes() + way_restriction_map.NumberOfDuplicatedNodes();
     TIMER_STOP(renumber);
 
+    std::cout << "Allocating: " << m_number_of_edge_based_nodes << " edge-based nodes." << std::endl;
     m_edge_based_node_container.nodes.resize(m_number_of_edge_based_nodes);
 
     TIMER_START(generate_nodes);
@@ -257,16 +258,16 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
 unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 {
     // heuristic: node-based graph node is a simple intersection with four edges (edge-based nodes)
-    m_edge_based_node_weights.reserve(4 * m_node_based_graph->GetNumberOfNodes());
-    nbe_to_ebn_mapping.resize(m_node_based_graph->GetEdgeCapacity(), SPECIAL_NODEID);
+    m_edge_based_node_weights.reserve(4 * m_node_based_graph.GetNumberOfNodes());
+    nbe_to_ebn_mapping.resize(m_node_based_graph.GetEdgeCapacity(), SPECIAL_NODEID);
 
     // renumber edge based node of outgoing edges
     unsigned numbered_edges_count = 0;
-    for (const auto current_node : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+    for (const auto current_node : util::irange(0u, m_node_based_graph.GetNumberOfNodes()))
     {
-        for (const auto current_edge : m_node_based_graph->GetAdjacentEdgeRange(current_node))
+        for (const auto current_edge : m_node_based_graph.GetAdjacentEdgeRange(current_node))
         {
-            EdgeData &edge_data = m_node_based_graph->GetEdgeData(current_edge);
+            EdgeData &edge_data = m_node_based_graph.GetEdgeData(current_edge);
             // only number incoming edges
             if (edge_data.reversed)
             {
@@ -275,7 +276,7 @@ unsigned EdgeBasedGraphFactory::LabelEdgeBasedNodes()
 
             m_edge_based_node_weights.push_back(edge_data.weight);
 
-            BOOST_ASSERT(numbered_edges_count < m_node_based_graph->GetNumberOfEdges());
+            BOOST_ASSERT(numbered_edges_count < m_node_based_graph.GetNumberOfEdges());
             nbe_to_ebn_mapping[current_edge] = numbered_edges_count;
             ++numbered_edges_count;
         }
@@ -300,20 +301,20 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
     // node-based graph
     {
         util::UnbufferedLog log;
-        util::Percent progress(log, m_node_based_graph->GetNumberOfNodes());
+        util::Percent progress(log, m_node_based_graph.GetNumberOfNodes());
 
         // m_compressed_edge_container.InitializeBothwayVector();
 
         // loop over all edges and generate new set of nodes
-        for (const auto nbg_node_u : util::irange(0u, m_node_based_graph->GetNumberOfNodes()))
+        for (const auto nbg_node_u : util::irange(0u, m_node_based_graph.GetNumberOfNodes()))
         {
             BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
             progress.PrintStatus(nbg_node_u);
-            for (EdgeID nbg_edge_id : m_node_based_graph->GetAdjacentEdgeRange(nbg_node_u))
+            for (EdgeID nbg_edge_id : m_node_based_graph.GetAdjacentEdgeRange(nbg_node_u))
             {
                 BOOST_ASSERT(nbg_edge_id != SPECIAL_EDGEID);
 
-                const NodeID nbg_node_v = m_node_based_graph->GetTarget(nbg_edge_id);
+                const NodeID nbg_node_v = m_node_based_graph.GetTarget(nbg_edge_id);
                 BOOST_ASSERT(nbg_node_v != SPECIAL_NODEID);
                 BOOST_ASSERT(nbg_node_u != nbg_node_v);
 
@@ -353,7 +354,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             const auto node_u = way.from;
             const auto node_v = way.to;
             // we know that the edge exists as non-reversed edge
-            const auto eid = m_node_based_graph->FindEdge(node_u, node_v);
+            const auto eid = m_node_based_graph.FindEdge(node_u, node_v);
 
             BOOST_ASSERT(nbe_to_ebn_mapping[eid] != SPECIAL_NODEID);
 
@@ -362,7 +363,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             BOOST_ASSERT(node_v != SPECIAL_NODEID);
 
             // find node in the edge based graph, we only require one id:
-            const EdgeData &edge_data = m_node_based_graph->GetEdgeData(eid);
+            const EdgeData &edge_data = m_node_based_graph.GetEdgeData(eid);
             // what is this ID all about? :(
             // BOOST_ASSERT(edge_data.edge_id < m_edge_based_node_container.Size());
             m_edge_based_node_container.nodes[edge_based_node_id].geometry_id = edge_data.geometry_id;
@@ -416,7 +417,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // Three nested loop look super-linear, but we are dealing with a (kind of)
     // linear number of turns only.
     SuffixTable street_name_suffix_table(scripting_environment);
-    guidance::TurnAnalysis turn_analysis(*m_node_based_graph,
+    guidance::TurnAnalysis turn_analysis(m_node_based_graph,
                                          m_edge_based_node_container,
                                          m_coordinates,
                                          node_restriction_map,
@@ -427,13 +428,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                          profile_properties);
 
     util::guidance::LaneDataIdMap lane_data_map;
-    guidance::lanes::TurnLaneHandler turn_lane_handler(*m_node_based_graph,
+    guidance::lanes::TurnLaneHandler turn_lane_handler(m_node_based_graph,
                                                        m_edge_based_node_container,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);
 
-    bearing_class_by_node_based_node.resize(m_node_based_graph->GetNumberOfNodes(),
+    bearing_class_by_node_based_node.resize(m_node_based_graph.GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
 
     // FIXME these need to be tuned in pre-allocated size
@@ -456,7 +457,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     {
         util::UnbufferedLog log;
 
-        const NodeID node_count = m_node_based_graph->GetNumberOfNodes();
+        const NodeID node_count = m_node_based_graph.GetNumberOfNodes();
         util::Percent progress(log, node_count);
         // This counter is used to keep track of how far along we've made it
         std::uint64_t nodes_completed = 0;
@@ -539,7 +540,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
             const auto node_restricted = isRestricted(node_along_road_entering,
                                                       node_at_center_of_intersection,
-                                                      m_node_based_graph->GetTarget(turn.eid),
+                                                      m_node_based_graph.GetTarget(turn.eid),
                                                       conditional_restriction_map);
 
             boost::optional<Conditional> conditional = boost::none;
@@ -554,8 +555,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  conditions}}};
             }
 
-            const auto &edge_data1 = m_node_based_graph->GetEdgeData(node_based_edge_from);
-            const auto &edge_data2 = m_node_based_graph->GetEdgeData(node_based_edge_to);
+            const auto &edge_data1 = m_node_based_graph.GetEdgeData(node_based_edge_from);
+            const auto &edge_data2 = m_node_based_graph.GetEdgeData(node_based_edge_to);
 
             BOOST_ASSERT(nbe_to_ebn_mapping[node_based_edge_from] !=
                          nbe_to_ebn_mapping[node_based_edge_to]);
@@ -670,15 +671,15 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // `b` by an outgoing edge. Therefore, we have to search all connected edges for
                     // edges entering `b`
                     for (const EdgeID outgoing_edge :
-                         m_node_based_graph->GetAdjacentEdgeRange(node_at_center_of_intersection))
+                         m_node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
                     {
                         const NodeID node_along_road_entering =
-                            m_node_based_graph->GetTarget(outgoing_edge);
+                            m_node_based_graph.GetTarget(outgoing_edge);
 
-                        const auto incoming_edge = m_node_based_graph->FindEdge(
+                        const auto incoming_edge = m_node_based_graph.FindEdge(
                             node_along_road_entering, node_at_center_of_intersection);
 
-                        if (m_node_based_graph->GetEdgeData(incoming_edge).reversed)
+                        if (m_node_based_graph.GetEdgeData(incoming_edge).reversed)
                             continue;
 
                         ++node_based_edge_counter;
@@ -755,7 +756,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                 nbe_to_ebn_mapping[turn.eid],
                                 node_along_road_entering,
                                 node_at_center_of_intersection,
-                                m_node_based_graph->GetTarget(turn.eid),
+                                m_node_based_graph.GetTarget(turn.eid),
                                 m_number_of_edge_based_nodes);
 
                             { // scope to forget edge_with_data after
@@ -807,14 +808,13 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                         duplicated_node_id;
 
                                     auto const node_at_end_of_turn =
-                                        m_node_based_graph->GetTarget(turn.eid);
+                                        m_node_based_graph.GetTarget(turn.eid);
 
                                     const auto is_way_restricted = way_restriction_map.IsRestricted(
                                         duplicated_node_id, node_at_end_of_turn);
 
                                     if (is_way_restricted)
                                     {
-
                                         auto const restriction = way_restriction_map.GetRestriction(
                                             duplicated_node_id, node_at_end_of_turn);
 

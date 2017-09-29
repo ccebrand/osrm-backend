@@ -19,6 +19,7 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     LoadDataFromFile(input_file);
     Compress(scripting_environment, turn_restrictions, conditional_turn_restrictions);
     CompressGeometry();
+    CompressAnnotationData();
 }
 
 // load the data serialised during the extraction run
@@ -66,11 +67,6 @@ void NodeBasedGraphFactory::Compress(
                               compressed_output_graph,
                               annotation_data,
                               compressed_edge_container);
-
-    // allocate segment data
-    compressed_edge_container.InitializeBothwayVector();
-
-    // TODO remap node-based graph shared data index / remove unused entries (from compression)
 }
 
 void NodeBasedGraphFactory::CompressGeometry()
@@ -110,10 +106,70 @@ void NodeBasedGraphFactory::CompressGeometry()
             auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
 
             // remember the geometry ID for both edges in the node-based graph
-            compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id,true};
-            compressed_output_graph.GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,false};
+            compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id, true};
+            compressed_output_graph.GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,
+                                                                          false};
         }
     }
+}
+
+void NodeBasedGraphFactory::CompressAnnotationData()
+{
+    const constexpr AnnotationID INVALID_ANNOTATIONID = -1;
+    // remap all entries to find which are used
+    std::vector<AnnotationID> annotation_mapping(annotation_data.size(), INVALID_ANNOTATIONID);
+
+    // first we mark entries, by setting their mapping to 0
+    for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
+    {
+        BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
+        for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
+        {
+            auto const &edge = compressed_output_graph.GetEdgeData(nbg_edge_id);
+            annotation_mapping[edge.annotation_data] = 0;
+        }
+    }
+
+    // now compute a prefix sum on all entries that are 0 to find the new mapping
+    AnnotationID prefix_sum = 0;
+    for(std::size_t i = 0; i < annotation_mapping.size(); ++i )
+    {
+        if( annotation_mapping[i] == 0 )
+            annotation_mapping[i] = prefix_sum++;
+        else
+        {
+            // flag for removal
+            annotation_data[i].name_id = INVALID_NAMEID;
+        }
+    }
+
+    // apply the mapping
+    for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
+    {
+        BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
+        for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
+        {
+            auto &edge = compressed_output_graph.GetEdgeData(nbg_edge_id);
+            edge.annotation_data = annotation_mapping[edge.annotation_data];
+            BOOST_ASSERT(edge.annotation_data != INVALID_ANNOTATIONID);
+        }
+    }
+
+    // remove unreferenced entries, shifting other entries to the front
+    const auto new_end = std::remove_if(annotation_data.begin(),
+                                     annotation_data.end(),
+                                     [&](auto const &data){
+                                         // both elements are considered equal (to remove the second
+                                         // one) if the annotation mapping of the second one is
+                                         // invalid
+                                         return data.name_id == INVALID_NAMEID;
+                                     });
+
+    const auto old_size = annotation_data.size();
+    // remove all remaining elements
+    annotation_data.erase(new_end, annotation_data.end());
+    util::Log() << " graoh compression removed " << (old_size - annotation_data.size())
+                << " annotations of " << old_size;
 }
 
 } // namespace extractor

@@ -65,6 +65,11 @@ class NodeBasedGraphFactory
     // geometry around
     void CompressGeometry();
 
+    // After graph compression, some of the annotation entries might not be referenced anymore. We
+    // compress the annotation data by relabeling the node-based graph references and removing all
+    // unreferenced entries
+    void CompressAnnotationData();
+
     // After produce, this will contain a compresse version of the node-based graph
     util::NodeBasedDynamicGraph compressed_output_graph;
     // To store the meta-data for the graph that is purely annotative / not used for the navigation

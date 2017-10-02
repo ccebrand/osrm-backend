@@ -118,14 +118,13 @@ inline EdgeID loadEdgesFromFile(storage::io::FileReader &file_reader,
 }
 
 inline EdgeID loadAnnotationData(storage::io::FileReader &file_reader,
-                             std::vector<extractor::NodeBasedEdgeAnnotation> &metadata)
+                                 std::vector<extractor::NodeBasedEdgeAnnotation> &metadata)
 {
     auto const meta_data_count = file_reader.ReadElementCount64();
     metadata.resize(meta_data_count);
-    file_reader.ReadInto(metadata.data(),meta_data_count);
+    file_reader.ReadInto(metadata.data(), meta_data_count);
     return meta_data_count;
 }
-
 }
 }
 

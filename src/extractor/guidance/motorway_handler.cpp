@@ -103,7 +103,8 @@ operator()(const NodeID, const EdgeID via_eid, Intersection intersection) const
 
 Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection intersection) const
 {
-    const auto &in_data = node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data);
+    const auto &in_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_eid).annotation_data);
     BOOST_ASSERT(isMotorwayClass(via_eid, node_based_graph));
 
     const auto countExitingMotorways = [this](const Intersection &intersection) {
@@ -123,7 +124,8 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             if (!road.entry_allowed)
                 continue;
 
-            const auto &out_data = node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+            const auto &out_data = node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(road.eid).annotation_data);
 
             const auto same_name = !util::guidance::requiresNameAnnounced(
                 in_data.name_id, out_data.name_id, name_table, street_name_suffix_table);
@@ -355,8 +357,10 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
     }
     else if (intersection.size() == 3)
     {
-        const auto &second_intersection_data = node_data_container.GetAnnotation(node_based_graph.GetEdgeData(intersection[2].eid).annotation_data);
-        const auto &first_intersection_data = node_data_container.GetAnnotation(node_based_graph.GetEdgeData(intersection[1].eid).annotation_data);
+        const auto &second_intersection_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(intersection[2].eid).annotation_data);
+        const auto &first_intersection_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(intersection[1].eid).annotation_data);
         const auto first_second_same_name =
             !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
                                                    first_intersection_data.name_id,

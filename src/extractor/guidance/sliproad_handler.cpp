@@ -158,8 +158,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
 
     for (const auto &road : main_road_intersection->intersection)
     {
-        const auto &target_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+        const auto &target_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(road.eid).annotation_data);
         target_road_name_ids.push_back(target_data.name_id);
     }
 
@@ -469,9 +469,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
         // Check all roads at `d` if one is connected to `c`, is so `bd` is Sliproad.
         for (const auto &candidate_road : target_intersection)
         {
-            const auto &candidate_data =
-                node_data_container.GetAnnotation(node_based_graph.GetEdgeData(candidate_road.eid)
-                                        .annotation_data);
+            const auto &candidate_data = node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(candidate_road.eid).annotation_data);
 
             // Name mismatch: check roads at `c` and `d` for same name
             const auto name_mismatch = [&](const NameID road_name_id) {
@@ -537,7 +536,8 @@ operator()(const NodeID /*nid*/, const EdgeID source_edge_id, Intersection inter
             intersection[*obvious].instruction.direction_modifier =
                 getTurnDirection(intersection[*obvious].angle);
         }
-        else if (node_data_container.GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
+        else if (node_data_container
+                     .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
                      .name_id != EMPTY_NAMEID)
         {
             intersection[*obvious].instruction.type = TurnType::NewName;
@@ -639,14 +639,17 @@ bool SliproadHandler::isThroughStreet(const EdgeID from, const IntersectionView 
     BOOST_ASSERT(!intersection.empty());
 
     const auto &edge_name_id =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(from).annotation_data).name_id;
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(from).annotation_data)
+            .name_id;
 
     auto first = begin(intersection) + 1; // Skip UTurn road
     auto last = end(intersection);
 
     auto same_name = [&](const auto &road) {
         const auto &road_name_id =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).name_id;
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                .name_id;
 
         return edge_name_id != EMPTY_NAMEID && //
                road_name_id != EMPTY_NAMEID && //
@@ -663,7 +666,8 @@ bool SliproadHandler::roadContinues(const EdgeID current, const EdgeID next) con
 {
     const auto &current_data =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(current).annotation_data);
-    const auto &next_data = node_data_container.GetAnnotation(node_based_graph.GetEdgeData(next).annotation_data);
+    const auto &next_data =
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(next).annotation_data);
 
     auto same_road_category = node_based_graph.GetEdgeData(current).flags.road_classification ==
                               node_based_graph.GetEdgeData(next).flags.road_classification;
@@ -741,12 +745,16 @@ bool SliproadHandler::allSameMode(const EdgeID from,
                                   const EdgeID sliproad_candidate,
                                   const EdgeID target_road) const
 {
-    return node_data_container.GetAnnotation(node_based_graph.GetEdgeData(from).annotation_data).travel_mode ==
-               node_data_container.GetAnnotation(node_based_graph.GetEdgeData(sliproad_candidate).annotation_data)
-                   .travel_mode &&
-           node_data_container.GetAnnotation(node_based_graph.GetEdgeData(sliproad_candidate).annotation_data)
+    return node_data_container.GetAnnotation(node_based_graph.GetEdgeData(from).annotation_data)
                    .travel_mode ==
-               node_data_container.GetAnnotation(node_based_graph.GetEdgeData(target_road).annotation_data)
+               node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(sliproad_candidate).annotation_data)
+                   .travel_mode &&
+           node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(sliproad_candidate).annotation_data)
+                   .travel_mode ==
+               node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(target_road).annotation_data)
                    .travel_mode;
 }
 

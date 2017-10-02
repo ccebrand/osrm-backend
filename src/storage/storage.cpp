@@ -15,6 +15,7 @@
 #include "extractor/class_data.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "extractor/files.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/original_edge_data.hpp"
@@ -22,7 +23,6 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
-#include "extractor/edge_based_node.hpp"
 
 #include "partition/cell_storage.hpp"
 #include "partition/edge_based_graph_reader.hpp"
@@ -255,8 +255,10 @@ void Storage::PopulateLayout(DataLayout &layout)
                                        io::FileReader::VerifyFingerprint);
         const auto nodes_number = nodes_data_file.ReadElementCount64();
         const auto annotations_number = nodes_data_file.ReadElementCount64();
-        layout.SetBlockSize<extractor::EdgeBasedNode>(DataLayout::EDGE_BASED_NODE_DATA_LIST, nodes_number);
-        layout.SetBlockSize<extractor::NodeBasedEdgeAnnotation>(DataLayout::ANNOTATION_DATA_LIST, annotations_number);
+        layout.SetBlockSize<extractor::EdgeBasedNode>(DataLayout::EDGE_BASED_NODE_DATA_LIST,
+                                                      nodes_number);
+        layout.SetBlockSize<extractor::NodeBasedEdgeAnnotation>(DataLayout::ANNOTATION_DATA_LIST,
+                                                                annotations_number);
     }
 
     if (boost::filesystem::exists(config.GetPath(".osrm.hsgr")))
@@ -709,15 +711,18 @@ void Storage::PopulateData(const DataLayout &layout, char *memory_ptr)
         auto edge_based_node_data_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode, true>(
             memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
         util::vector_view<extractor::EdgeBasedNode> edge_based_node_data(
-            edge_based_node_data_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
+            edge_based_node_data_list_ptr,
+            layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
 
-
-        auto annotation_data_list_ptr = layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation, true>(
-            memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
+        auto annotation_data_list_ptr =
+            layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation, true>(
+                memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
         util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
-            annotation_data_list_ptr, layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
+            annotation_data_list_ptr,
+            layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
 
-        extractor::EdgeBasedNodeDataView node_data(std::move(edge_based_node_data), std::move(annotation_data));
+        extractor::EdgeBasedNodeDataView node_data(std::move(edge_based_node_data),
+                                                   std::move(annotation_data));
 
         extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
     }

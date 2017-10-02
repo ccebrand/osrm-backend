@@ -419,7 +419,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         std::mutex name_data_mutex;
         tbb::parallel_sort(all_edges_list.begin(),
                            all_edges_list.end(),
-                           CmpEdgeByInternalSourceTargetAndName{all_edges_annotation_data_list, name_char_data, name_offsets});
+                           CmpEdgeByInternalSourceTargetAndName{
+                               all_edges_annotation_data_list, name_char_data, name_offsets});
         TIMER_STOP(sort_edges_by_renumbered_start);
         log << "ok, after " << TIMER_SEC(sort_edges_by_renumbered_start) << "s";
     }
@@ -560,7 +561,8 @@ void ExtractionContainers::WriteMetadata(storage::io::FileWriter &file_out) cons
     TIMER_START(write_meta_data);
 
     file_out.WriteElementCount64(all_edges_annotation_data_list.size());
-    file_out.WriteFrom(all_edges_annotation_data_list.data(), all_edges_annotation_data_list.size());
+    file_out.WriteFrom(all_edges_annotation_data_list.data(),
+                       all_edges_annotation_data_list.size());
 
     TIMER_STOP(write_meta_data);
     log << "ok, after " << TIMER_SEC(write_meta_data) << "s";

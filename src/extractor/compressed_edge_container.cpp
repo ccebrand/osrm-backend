@@ -264,7 +264,7 @@ void CompressedEdgeContainer::InitializeBothwayVector()
 
 unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
 {
-    if(!segment_data)
+    if (!segment_data)
         InitializeBothwayVector();
 
     const auto &forward_bucket = GetBucketReference(f_edge_id);

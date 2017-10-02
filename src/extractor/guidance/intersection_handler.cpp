@@ -53,16 +53,17 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
 {
 
     bool on_ramp = node_based_graph.GetEdgeData(via_edge).flags.road_classification.IsRampClass();
-    bool onto_ramp =
-        node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsRampClass();
+    bool onto_ramp = node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsRampClass();
 
     if (!on_ramp && onto_ramp)
         return TurnType::OnRamp;
 
     const auto &in_name =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data).name_id;
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+            .name_id;
     const auto &out_name =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).name_id;
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .name_id;
 
     const auto same_name = !util::guidance::requiresNameAnnounced(
         in_name, out_name, name_table, street_name_suffix_table);
@@ -93,19 +94,21 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
 
     // handle travel modes:
     const auto in_mode =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data).travel_mode;
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+            .travel_mode;
     const auto out_mode =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).travel_mode;
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .travel_mode;
     const auto needs_notification = in_mode != out_mode;
 
     if (type == TurnType::Turn)
     {
         const auto &in_classification = node_based_graph.GetEdgeData(via_edge).flags;
-        const auto &in_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
+        const auto &in_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(via_edge).annotation_data);
         const auto &out_classification = node_based_graph.GetEdgeData(road.eid).flags;
-        const auto &out_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+        const auto &out_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(road.eid).annotation_data);
 
         if (util::guidance::requiresNameAnnounced(
                 in_data.name_id, out_data.name_id, name_table, street_name_suffix_table))
@@ -322,9 +325,13 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
     // TODO handle low priority road classes in a reasonable way
     const auto suppressed_type = [&](const ConnectedRoad &road) {
         const auto in_mode =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data).travel_mode;
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
+                .travel_mode;
         const auto out_mode =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).travel_mode;
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                .travel_mode;
         return in_mode == out_mode ? TurnType::Suppressed : TurnType::Notification;
     };
 
@@ -333,10 +340,10 @@ void IntersectionHandler::assignFork(const EdgeID via_edge,
         left.instruction = {TurnType::Fork, DirectionModifier::SlightLeft};
         if (angularDeviation(center.angle, 180) < MAXIMAL_ALLOWED_NO_TURN_DEVIATION)
         {
-            const auto &in_data =
-                node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data);
-            const auto &out_data =
-                node_data_container.GetAnnotation(node_based_graph.GetEdgeData(center.eid).annotation_data);
+            const auto &in_data = node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(via_edge).annotation_data);
+            const auto &out_data = node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(center.eid).annotation_data);
             if (detail::requiresAnnouncement(in_data, out_data))
             {
                 center.instruction = {TurnType::Fork, DirectionModifier::Straight};
@@ -392,8 +399,8 @@ void IntersectionHandler::assignTrivialTurns(const EdgeID via_eid,
 bool IntersectionHandler::isThroughStreet(const std::size_t index,
                                           const Intersection &intersection) const
 {
-    const auto &data_at_index =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
+    const auto &data_at_index = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
 
     if (data_at_index.name_id == EMPTY_NAMEID)
         return false;
@@ -405,8 +412,8 @@ bool IntersectionHandler::isThroughStreet(const std::size_t index,
             continue;
 
         const auto &road = intersection[road_index];
-        const auto &road_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+        const auto &road_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(road.eid).annotation_data);
 
         // roads have a near straight angle (180 degree)
         const bool is_nearly_straight = angularDeviation(road.angle, intersection[index].angle) >
@@ -467,10 +474,10 @@ IntersectionHandler::getNextIntersection(const NodeID at, const EdgeID via) cons
 
 bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID target_edge_id) const
 {
-    const auto &source_edge_data =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(source_edge_id).annotation_data);
-    const auto &target_edge_data =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(target_edge_id).annotation_data);
+    const auto &source_edge_data = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(source_edge_id).annotation_data);
+    const auto &target_edge_data = node_data_container.GetAnnotation(
+        node_based_graph.GetEdgeData(target_edge_id).annotation_data);
 
     return source_edge_data.name_id != EMPTY_NAMEID && //
            target_edge_data.name_id != EMPTY_NAMEID && //

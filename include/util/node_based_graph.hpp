@@ -48,9 +48,9 @@ struct NodeBasedEdgeData
 // Check if two edge data elements can be compressed into a single edge (i.e. match in terms of
 // their meta-data).
 inline bool CanBeCompressed(const NodeBasedEdgeData &lhs,
-                     const NodeBasedEdgeData &rhs,
-                     const extractor::EdgeBasedNodeDataContainer &node_data_container,
-                     bool ignore_name)
+                            const NodeBasedEdgeData &rhs,
+                            const extractor::EdgeBasedNodeDataContainer &node_data_container,
+                            bool ignore_name)
 {
     if (!(lhs.flags == rhs.flags))
         return false;

@@ -12,6 +12,7 @@
 #include "customizer/edge_based_graph.hpp"
 
 #include "extractor/datasources.hpp"
+#include "extractor/edge_based_node.hpp"
 #include "extractor/guidance/turn_instruction.hpp"
 #include "extractor/guidance/turn_lane_types.hpp"
 #include "extractor/intersection_bearings_container.hpp"
@@ -20,7 +21,6 @@
 #include "extractor/profile_properties.hpp"
 #include "extractor/segment_data_container.hpp"
 #include "extractor/turn_data_container.hpp"
-#include "extractor/edge_based_node.hpp"
 
 #include "contractor/query_graph.hpp"
 
@@ -338,17 +338,21 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     void InitializeEdgeBasedNodeDataInformationPointers(storage::DataLayout &layout,
                                                         char *memory_ptr)
     {
-        const auto edge_based_node_list_ptr =
-            layout.GetBlockPtr<extractor::EdgeBasedNode>(memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
+        const auto edge_based_node_list_ptr = layout.GetBlockPtr<extractor::EdgeBasedNode>(
+            memory_ptr, storage::DataLayout::EDGE_BASED_NODE_DATA_LIST);
         util::vector_view<extractor::EdgeBasedNode> edge_based_node_data_list(
-            edge_based_node_list_ptr, layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
+            edge_based_node_list_ptr,
+            layout.num_entries[storage::DataLayout::EDGE_BASED_NODE_DATA_LIST]);
 
         const auto annotation_data_list_ptr =
-            layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation>(memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
+            layout.GetBlockPtr<extractor::NodeBasedEdgeAnnotation>(
+                memory_ptr, storage::DataLayout::ANNOTATION_DATA_LIST);
         util::vector_view<extractor::NodeBasedEdgeAnnotation> annotation_data(
-            annotation_data_list_ptr, layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
+            annotation_data_list_ptr,
+            layout.num_entries[storage::DataLayout::ANNOTATION_DATA_LIST]);
 
-        edge_based_node_data = extractor::EdgeBasedNodeDataView(std::move(edge_based_node_data_list), std::move(annotation_data));
+        edge_based_node_data = extractor::EdgeBasedNodeDataView(
+            std::move(edge_based_node_data_list), std::move(annotation_data));
     }
 
     void InitializeEdgeInformationPointers(storage::DataLayout &layout, char *memory_ptr)

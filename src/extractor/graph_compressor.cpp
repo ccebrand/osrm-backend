@@ -154,7 +154,8 @@ void GraphCompressor::Compress(
                 fwd_annotation_data1.CanCombineWith(fwd_annotation_data2) &&
                 rev_annotation_data1.CanCombineWith(rev_annotation_data2))
             {
-                BOOST_ASSERT(!(graph.GetEdgeData(forward_e1).reversed && graph.GetEdgeData(reverse_e1).reversed));
+                BOOST_ASSERT(!(graph.GetEdgeData(forward_e1).reversed &&
+                               graph.GetEdgeData(reverse_e1).reversed));
                 /*
                  * Remember Lane Data for compressed parts. This handles scenarios where lane-data
                  * is

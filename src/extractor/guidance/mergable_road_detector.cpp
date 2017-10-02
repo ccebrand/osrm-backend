@@ -33,7 +33,9 @@ inline auto makeCheckRoadForName(const NameID name_id,
         const MergableRoadDetector::MergableRoadData &road) {
         // since we filter here, we don't want any other name than the one we are looking for
         const auto road_name =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).name_id;
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+                .name_id;
         if (name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
             return true;
         const auto requires_announcement =
@@ -128,8 +130,10 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
         return true;
     else // or it cannot have the same name
         return !HaveIdenticalNames(
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data).name_id,
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data).name_id);
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
+                .name_id,
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data)
+                .name_id);
 }
 
 bool MergableRoadDetector::EdgeDataSupportsMerge(
@@ -177,7 +181,8 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
      * Since both items have the same id, we can `select` based on any setup
      */
     SelectStraightmostRoadByNameAndOnlyChoice selector(
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data).name_id,
+        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
+            .name_id,
         lhs.bearing,
         /*requires entry=*/false);
 
@@ -278,7 +283,8 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
     const auto getCoordinatesAlongWay = [&](const EdgeID edge_id, const double max_length) {
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data).name_id,
+            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
+                .name_id,
             lhs.bearing,
             /*requires_entry=*/false);
         graph_walker.TraverseRoad(intersection_node, edge_id, accumulator, selector);
@@ -392,12 +398,15 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
         // check if all items share a name
         const auto range = node_based_graph.GetAdjacentEdgeRange(nid);
         const auto required_name_id =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
+            node_data_container
+                .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
                 .name_id;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id) {
             const auto road_name =
-                node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data).name_id;
+                node_data_container
+                    .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
+                    .name_id;
             if (required_name_id == EMPTY_NAMEID || road_name == EMPTY_NAMEID)
                 return false;
             return !util::guidance::requiresNameAnnounced(
@@ -442,7 +451,9 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     const auto next_intersection_along_road = intersection_generator.GetConnectedRoads(
         next_intersection_parameters.nid, next_intersection_parameters.via_eid);
     const auto extract_name_id = [this](const MergableRoadData &road) {
-        return node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data).name_id;
+        return node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
+            .name_id;
     };
 
     const auto requested_name_id = extract_name_id(road);
@@ -482,11 +493,11 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
            EdgeDataSupportsMerge(
                node_based_graph.GetEdgeData(next_road_along_path->eid).flags,
                node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid).flags,
-               node_data_container.GetAnnotation(node_based_graph.GetEdgeData(next_road_along_path->eid)
-                                       .annotation_data),
-               node_data_container.GetAnnotation(node_based_graph
-                                       .GetEdgeData(opposite_of_next_road_along_path->eid)
-                                       .annotation_data));
+               node_data_container.GetAnnotation(
+                   node_based_graph.GetEdgeData(next_road_along_path->eid).annotation_data),
+               node_data_container.GetAnnotation(
+                   node_based_graph.GetEdgeData(opposite_of_next_road_along_path->eid)
+                       .annotation_data));
 }
 
 } // namespace guidance

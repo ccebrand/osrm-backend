@@ -84,9 +84,9 @@ BOOST_AUTO_TEST_CASE(long_road_test)
                                     MakeUnitEdge(4, 3)};
 
     Graph graph(5, edges);
-    BOOST_ASSERT(compatible(graph,annotations,0,2));
-    BOOST_ASSERT(compatible(graph,annotations,2,4));
-    BOOST_ASSERT(compatible(graph,annotations,4,6));
+    BOOST_ASSERT(compatible(graph, annotations, 0, 2));
+    BOOST_ASSERT(compatible(graph, annotations, 2, 4));
+    BOOST_ASSERT(compatible(graph, annotations, 4, 6));
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
@@ -135,18 +135,18 @@ BOOST_AUTO_TEST_CASE(loop_test)
 
     Graph graph(6, edges);
     BOOST_ASSERT(edges.size() == 12);
-    BOOST_ASSERT(compatible(graph,annotations,0,1));
-    BOOST_ASSERT(compatible(graph,annotations,1,2));
-    BOOST_ASSERT(compatible(graph,annotations,2,3));
-    BOOST_ASSERT(compatible(graph,annotations,3,4));
-    BOOST_ASSERT(compatible(graph,annotations,4,5));
-    BOOST_ASSERT(compatible(graph,annotations,5,6));
-    BOOST_ASSERT(compatible(graph,annotations,6,7));
-    BOOST_ASSERT(compatible(graph,annotations,7,8));
-    BOOST_ASSERT(compatible(graph,annotations,8,9));
-    BOOST_ASSERT(compatible(graph,annotations,9,10));
-    BOOST_ASSERT(compatible(graph,annotations,10,11));
-    BOOST_ASSERT(compatible(graph,annotations,11,0));
+    BOOST_ASSERT(compatible(graph, annotations, 0, 1));
+    BOOST_ASSERT(compatible(graph, annotations, 1, 2));
+    BOOST_ASSERT(compatible(graph, annotations, 2, 3));
+    BOOST_ASSERT(compatible(graph, annotations, 3, 4));
+    BOOST_ASSERT(compatible(graph, annotations, 4, 5));
+    BOOST_ASSERT(compatible(graph, annotations, 5, 6));
+    BOOST_ASSERT(compatible(graph, annotations, 6, 7));
+    BOOST_ASSERT(compatible(graph, annotations, 7, 8));
+    BOOST_ASSERT(compatible(graph, annotations, 8, 9));
+    BOOST_ASSERT(compatible(graph, annotations, 9, 10));
+    BOOST_ASSERT(compatible(graph, annotations, 10, 11));
+    BOOST_ASSERT(compatible(graph, annotations, 11, 0));
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
@@ -191,11 +191,11 @@ BOOST_AUTO_TEST_CASE(t_intersection)
                                     MakeUnitEdge(3, 1)};
 
     Graph graph(4, edges);
-    BOOST_ASSERT(compatible(graph,annotations,0,1));
-    BOOST_ASSERT(compatible(graph,annotations,1,2));
-    BOOST_ASSERT(compatible(graph,annotations,2,3));
-    BOOST_ASSERT(compatible(graph,annotations,3,4));
-    BOOST_ASSERT(compatible(graph,annotations,4,5));
+    BOOST_ASSERT(compatible(graph, annotations, 0, 1));
+    BOOST_ASSERT(compatible(graph, annotations, 1, 2));
+    BOOST_ASSERT(compatible(graph, annotations, 2, 3));
+    BOOST_ASSERT(compatible(graph, annotations, 3, 4));
+    BOOST_ASSERT(compatible(graph, annotations, 4, 5));
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,
@@ -233,8 +233,8 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     edges[2].data.annotation_data = edges[3].data.annotation_data = 1;
 
     Graph graph(5, edges);
-    BOOST_ASSERT(compatible(graph,annotations,0,1));
-    BOOST_ASSERT(compatible(graph,annotations,2,3));
+    BOOST_ASSERT(compatible(graph, annotations, 0, 1));
+    BOOST_ASSERT(compatible(graph, annotations, 2, 3));
 
     compressor.Compress(barrier_nodes,
                         traffic_lights,

@@ -190,10 +190,10 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return left_tie > right_tie;
     };
     const auto RoadCompareSameName = [&](const auto &lhs, const auto &rhs) {
-        const auto &lhs_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data);
-        const auto &rhs_data =
-            node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data);
+        const auto &lhs_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(lhs.eid).annotation_data);
+        const auto &rhs_data = node_data_container.GetAnnotation(
+            node_based_graph.GetEdgeData(rhs.eid).annotation_data);
         const auto lhs_continues = IsContinueRoad(lhs_data);
         const auto rhs_continues = IsContinueRoad(rhs_data);
         const auto left_tie = std::tie(lhs.entry_allowed, lhs_continues);
@@ -209,7 +209,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     best_option = std::distance(begin(intersection), best_option_it);
     best_option_deviation = angularDeviation(intersection[best_option].angle, STRAIGHT_ANGLE);
     const auto &best_option_edge = node_based_graph.GetEdgeData(intersection[best_option].eid);
-    const auto &best_option_data = node_data_container.GetAnnotation(best_option_edge.annotation_data);
+    const auto &best_option_data =
+        node_data_container.GetAnnotation(best_option_edge.annotation_data);
 
     // Unless the in way is also low priority, it is generally undesirable to
     // indicate that a low priority road is obvious
@@ -246,7 +247,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     auto best_continue_it =
         std::min_element(begin(intersection), end(intersection), RoadCompareSameName);
     const auto best_continue_edge = node_based_graph.GetEdgeData(best_continue_it->eid);
-    const auto best_continue_data = node_data_container.GetAnnotation(best_continue_edge.annotation_data);
+    const auto best_continue_data =
+        node_data_container.GetAnnotation(best_continue_edge.annotation_data);
     if (IsContinueRoad(best_continue_data) ||
         (in_way_data.name_id == EMPTY_NAMEID && best_continue_data.name_id == EMPTY_NAMEID))
     {
@@ -267,21 +269,21 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     // continue instruction because they share a name with the approaching way
     const std::int64_t continue_count =
         count_if(++begin(intersection), end(intersection), [&](const auto &way) {
-            return IsContinueRoad(
-                node_data_container.GetAnnotation(node_based_graph.GetEdgeData(way.eid).annotation_data));
+            return IsContinueRoad(node_data_container.GetAnnotation(
+                node_based_graph.GetEdgeData(way.eid).annotation_data));
         });
     const std::int64_t continue_count_valid =
         count_if(++begin(intersection), end(intersection), [&](const auto &way) {
-            return IsContinueRoad(node_data_container.GetAnnotation(node_based_graph.GetEdgeData(way.eid)
-                                                          .annotation_data)) &&
+            return IsContinueRoad(node_data_container.GetAnnotation(
+                       node_based_graph.GetEdgeData(way.eid).annotation_data)) &&
                    way.entry_allowed;
         });
 
     // checks if continue candidates are sharp turns
     const bool all_continues_are_narrow = [&]() {
         return std::count_if(begin(intersection), end(intersection), [&](const Road &road) {
-                   const auto &road_data =
-                       node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data);
+                   const auto &road_data = node_data_container.GetAnnotation(
+                       node_based_graph.GetEdgeData(road.eid).annotation_data);
                    const double &road_angle = angularDeviation(road.angle, STRAIGHT_ANGLE);
                    return IsContinueRoad(road_data) && (road_angle < NARROW_TURN_ANGLE);
                }) == continue_count;
@@ -484,7 +486,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     else
     {
         const auto &continue_edge = node_based_graph.GetEdgeData(intersection[best_continue].eid);
-        const auto &continue_data = node_data_container.GetAnnotation(continue_edge.annotation_data);
+        const auto &continue_data =
+            node_data_container.GetAnnotation(continue_edge.annotation_data);
         if (std::abs(best_continue_deviation) < 1)
             return best_continue;
 
@@ -581,7 +584,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                     // roads. So if there is a road that is enterable in the opposite direction just
                     // prior, a turn is not obvious
                     const auto &turn_edge_data = node_based_graph.GetEdgeData(comparison_road.eid);
-                    const auto &turn_data = node_data_container.GetAnnotation(turn_edge_data.annotation_data);
+                    const auto &turn_data =
+                        node_data_container.GetAnnotation(turn_edge_data.annotation_data);
                     if (angularDeviation(comparison_road.angle, STRAIGHT_ANGLE) > GROUP_ANGLE &&
                         angularDeviation(comparison_road.angle, continue_road.angle) <
                             FUZZY_ANGLE_DIFFERENCE &&

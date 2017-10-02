@@ -137,7 +137,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         facade.GetOSMNodeIDOfNode(target_geometry[target_segment_end_coordinate]));
 
     BOOST_ASSERT(geometry.segment_distances.size() == geometry.segment_offsets.size() - 1);
-    if( geometry.locations.size() <= geometry.segment_distances.size())
+    if (geometry.locations.size() <= geometry.segment_distances.size())
     {
         std::cout << "Geometry missmatch:\n";
         std::cout << "Locations: " << geometry.locations.size() << std::endl;

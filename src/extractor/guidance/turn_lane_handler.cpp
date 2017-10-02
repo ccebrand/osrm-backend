@@ -180,7 +180,8 @@ TurnLaneScenario TurnLaneHandler::deduceScenario(const NodeID at,
         (intersection.size() == 2 &&
          ((lane_description_id != INVALID_LANE_DESCRIPTIONID &&
            lane_description_id ==
-               node_data_container.GetAnnotation(node_based_graph.GetEdgeData(intersection[1].eid).annotation_data)
+               node_data_container
+                   .GetAnnotation(node_based_graph.GetEdgeData(intersection[1].eid).annotation_data)
                    .lane_description_id) &&
           angularDeviation(intersection[1].angle, STRAIGHT_ANGLE) < FUZZY_ANGLE_DIFFERENCE));
 
@@ -722,10 +723,12 @@ Intersection TurnLaneHandler::handleSliproadTurn(Intersection intersection,
             return previous_intersection[sliproad_index + 1];
     }();
     const auto main_description_id =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
+        node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
             .lane_description_id;
     const auto sliproad_description_id =
-        node_data_container.GetAnnotation(node_based_graph.GetEdgeData(sliproad.eid).annotation_data)
+        node_data_container
+            .GetAnnotation(node_based_graph.GetEdgeData(sliproad.eid).annotation_data)
             .lane_description_id;
 
     if (main_description_id == INVALID_LANE_DESCRIPTIONID ||

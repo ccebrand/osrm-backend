@@ -38,8 +38,7 @@ RoundaboutHandler::RoundaboutHandler(const util::NodeBasedDynamicGraph &node_bas
                           street_name_suffix_table,
                           intersection_generator),
       compressed_edge_container(compressed_edge_container), profile_properties(profile_properties),
-      coordinate_extractor(
-          node_based_graph, compressed_edge_container, coordinates)
+      coordinate_extractor(node_based_graph, compressed_edge_container, coordinates)
 {
 }
 
@@ -224,8 +223,8 @@ bool RoundaboutHandler::qualifiesAsRoundaboutIntersection(
                     std::uint8_t{0},
                     [this](const auto current_max, const auto current_eid) {
                         return std::max(current_max,
-                                        node_based_graph.GetEdgeData(current_eid).flags
-                                            .road_classification.GetNumberOfLanes());
+                                        node_based_graph.GetEdgeData(current_eid)
+                                            .flags.road_classification.GetNumberOfLanes());
                     });
 
                 const auto next_coordinate =
@@ -451,7 +450,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
         {
             auto &road = intersection[idx];
             auto &turn = road;
-            const auto &out_data = node_based_graph.GetEdgeData(road.eid).flags;;
+            const auto &out_data = node_based_graph.GetEdgeData(road.eid).flags;
+            ;
             if (out_data.roundabout || out_data.circular)
             {
                 // TODO can forks happen in roundabouts? E.g. required lane changes
@@ -475,8 +475,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                              node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
                         {
                             const auto &leaving_edge = node_based_graph.GetEdgeData(eid);
-                            if (!leaving_edge.reversed &&
-                                !leaving_edge.flags.roundabout &&
+                            if (!leaving_edge.reversed && !leaving_edge.flags.roundabout &&
                                 !leaving_edge.flags.circular &&
                                 !leaving_edge.flags.road_classification.IsLowPriorityRoadClass())
                                 return true;

@@ -162,7 +162,8 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
 
     // Add edge-based node data for forward and reverse nodes indexed by edge_id
     BOOST_ASSERT(nbe_to_ebn_mapping[edge_id_1] != SPECIAL_EDGEID);
-    m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].geometry_id = forward_data.geometry_id;
+    m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].geometry_id =
+        forward_data.geometry_id;
     m_edge_based_node_container.nodes[nbe_to_ebn_mapping[edge_id_1]].annotation_id =
         forward_data.annotation_data;
     if (nbe_to_ebn_mapping[edge_id_2] != SPECIAL_EDGEID)
@@ -222,7 +223,8 @@ void EdgeBasedGraphFactory::Run(ScriptingEnvironment &scripting_environment,
         LabelEdgeBasedNodes() + way_restriction_map.NumberOfDuplicatedNodes();
     TIMER_STOP(renumber);
 
-    std::cout << "Allocating: " << m_number_of_edge_based_nodes << " edge-based nodes." << std::endl;
+    std::cout << "Allocating: " << m_number_of_edge_based_nodes << " edge-based nodes."
+              << std::endl;
     m_edge_based_node_container.nodes.resize(m_number_of_edge_based_nodes);
 
     TIMER_START(generate_nodes);
@@ -366,8 +368,10 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             const EdgeData &edge_data = m_node_based_graph.GetEdgeData(eid);
             // what is this ID all about? :(
             // BOOST_ASSERT(edge_data.edge_id < m_edge_based_node_container.Size());
-            m_edge_based_node_container.nodes[edge_based_node_id].geometry_id = edge_data.geometry_id;
-            m_edge_based_node_container.nodes[edge_based_node_id].annotation_id = edge_data.annotation_data;
+            m_edge_based_node_container.nodes[edge_based_node_id].geometry_id =
+                edge_data.geometry_id;
+            m_edge_based_node_container.nodes[edge_based_node_id].annotation_id =
+                edge_data.annotation_data;
 
             m_edge_based_node_weights.push_back(m_edge_based_node_weights[eid]);
 

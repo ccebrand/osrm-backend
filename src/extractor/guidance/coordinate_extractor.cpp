@@ -61,8 +61,8 @@ CoordinateExtractor::CoordinateExtractor(
     const util::NodeBasedDynamicGraph &node_based_graph,
     const extractor::CompressedEdgeContainer &compressed_geometries,
     const std::vector<util::Coordinate> &node_coordinates)
-    : node_based_graph(node_based_graph),
-      compressed_geometries(compressed_geometries), node_coordinates(node_coordinates)
+    : node_based_graph(node_based_graph), compressed_geometries(compressed_geometries),
+      node_coordinates(node_coordinates)
 {
 }
 

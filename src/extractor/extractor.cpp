@@ -215,7 +215,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    turn_restrictions,
                                                    conditional_turn_restrictions);
 
-    auto const& coordinates = node_based_graph_factory.GetCoordinates();
+    auto const &coordinates = node_based_graph_factory.GetCoordinates();
 
     auto node_based_graph = node_based_graph_factory.GetGraph();
 
@@ -256,20 +256,20 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     const auto number_of_edge_based_nodes =
         BuildEdgeExpandedGraph(node_based_graph,
-                                   coordinates,
-                                   node_based_graph_factory.GetCompressedEdges(),
-                                   barrier_nodes,
-                                   traffic_signals,
-                                   turn_restrictions,
-                                   conditional_turn_restrictions,
-                                   turn_lane_map,
-                                   scripting_environment,
-                                   edge_based_nodes_container,
-                                   edge_based_node_segments,
-                                   node_is_startpoint,
-                                   edge_based_node_weights,
-                                   edge_based_edge_list,
-                                   config.GetPath(".osrm.icd").string());
+                               coordinates,
+                               node_based_graph_factory.GetCompressedEdges(),
+                               barrier_nodes,
+                               traffic_signals,
+                               turn_restrictions,
+                               conditional_turn_restrictions,
+                               turn_lane_map,
+                               scripting_environment,
+                               edge_based_nodes_container,
+                               edge_based_node_segments,
+                               node_is_startpoint,
+                               edge_based_node_weights,
+                               edge_based_edge_list,
+                               config.GetPath(".osrm.icd").string());
 
     TIMER_STOP(expansion);
 
@@ -277,7 +277,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // destroys internal containers
     files::writeSegmentData(config.GetPath(".osrm.geometry"),
                             *node_based_graph_factory.GetCompressedEdges().ToSegmentData());
-
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
@@ -290,8 +289,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
     util::Log() << "Computing strictly connected components ...";
-    FindComponents(
-        number_of_edge_based_nodes, edge_based_edge_list, edge_based_node_segments, edge_based_nodes_container);
+    FindComponents(number_of_edge_based_nodes,
+                   edge_based_edge_list,
+                   edge_based_node_segments,
+                   edge_based_nodes_container);
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
@@ -305,7 +306,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
     TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
+    files::writeEdgeBasedGraph(
+        config.GetPath(".osrm.ebg"), number_of_edge_based_nodes, edge_based_edge_list);
     TIMER_STOP(write_edges);
     util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
 

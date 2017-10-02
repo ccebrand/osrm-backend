@@ -205,8 +205,11 @@ NodeBasedGraphWalker::TraverseRoad(NodeID current_node_id,
         if (next_intersection.size() <= 1)
             return {};
 
-        auto next_edge_id =
-            selector(current_node_id, current_edge_id, next_intersection, node_based_graph, node_data_container);
+        auto next_edge_id = selector(current_node_id,
+                                     current_edge_id,
+                                     next_intersection,
+                                     node_based_graph,
+                                     node_data_container);
 
         if (!next_edge_id)
             return {};

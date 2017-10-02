@@ -5,6 +5,8 @@
 
 #include "util/log.hpp"
 
+#include <boost/assert.hpp>
+
 namespace osrm
 {
 namespace extractor
@@ -51,6 +53,29 @@ void NodeBasedGraphFactory::LoadDataFromFile(const boost::filesystem::path &inpu
     // it here.
     compressed_output_graph =
         util::NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
+
+    // check whether the graph is sane
+    BOOST_ASSERT([this]() {
+        for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
+        {
+            for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
+            {
+                // we cannot have invalid edge-ids in the graph
+                if (nbg_edge_id == SPECIAL_EDGEID)
+                    return false;
+
+                const auto nbg_node_v = compressed_output_graph.GetTarget(nbg_edge_id);
+
+                auto reverse = compressed_output_graph.FindEdge(nbg_node_v, nbg_node_u);
+
+                // found an edge that is reversed in both directions, should be two distinct edges
+                if (compressed_output_graph.GetEdgeData(nbg_edge_id).reversed &&
+                    compressed_output_graph.GetEdgeData(reverse).reversed)
+                    return false;
+            }
+        }
+        return true;
+    }());
 }
 
 void NodeBasedGraphFactory::Compress(
@@ -73,7 +98,6 @@ void NodeBasedGraphFactory::CompressGeometry()
 {
     for (const auto nbg_node_u : util::irange(0u, compressed_output_graph.GetNumberOfNodes()))
     {
-        BOOST_ASSERT(nbg_node_u != SPECIAL_NODEID);
         for (EdgeID nbg_edge_id : compressed_output_graph.GetAdjacentEdgeRange(nbg_node_u))
         {
             BOOST_ASSERT(nbg_edge_id != SPECIAL_EDGEID);
@@ -132,9 +156,9 @@ void NodeBasedGraphFactory::CompressAnnotationData()
 
     // now compute a prefix sum on all entries that are 0 to find the new mapping
     AnnotationID prefix_sum = 0;
-    for(std::size_t i = 0; i < annotation_mapping.size(); ++i )
+    for (std::size_t i = 0; i < annotation_mapping.size(); ++i)
     {
-        if( annotation_mapping[i] == 0 )
+        if (annotation_mapping[i] == 0)
             annotation_mapping[i] = prefix_sum++;
         else
         {
@@ -156,14 +180,13 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     }
 
     // remove unreferenced entries, shifting other entries to the front
-    const auto new_end = std::remove_if(annotation_data.begin(),
-                                     annotation_data.end(),
-                                     [&](auto const &data){
-                                         // both elements are considered equal (to remove the second
-                                         // one) if the annotation mapping of the second one is
-                                         // invalid
-                                         return data.name_id == INVALID_NAMEID;
-                                     });
+    const auto new_end =
+        std::remove_if(annotation_data.begin(), annotation_data.end(), [&](auto const &data) {
+            // both elements are considered equal (to remove the second
+            // one) if the annotation mapping of the second one is
+            // invalid
+            return data.name_id == INVALID_NAMEID;
+        });
 
     const auto old_size = annotation_data.size();
     // remove all remaining elements

@@ -105,6 +105,7 @@ void GraphCompressor::Compress(
             BOOST_ASSERT(forward_e2 >= graph.BeginEdges(node_v) &&
                          forward_e2 < graph.EndEdges(node_v));
             const EdgeID reverse_e2 = graph.BeginEdges(node_v) + 1 - reverse_edge_order;
+
             BOOST_ASSERT(SPECIAL_EDGEID != reverse_e2);
             BOOST_ASSERT(reverse_e2 >= graph.BeginEdges(node_v) &&
                          reverse_e2 < graph.EndEdges(node_v));
@@ -147,10 +148,13 @@ void GraphCompressor::Compress(
 
             if ((fwd_edge_data1.flags == fwd_edge_data2.flags) &&
                 (rev_edge_data1.flags == rev_edge_data2.flags) &&
+                (fwd_edge_data1.reversed == fwd_edge_data2.reversed) &&
+                (rev_edge_data1.reversed == rev_edge_data2.reversed) &&
                 // annotations need to match, except for the lane-id which can differ
                 fwd_annotation_data1.CanCombineWith(fwd_annotation_data2) &&
                 rev_annotation_data1.CanCombineWith(rev_annotation_data2))
             {
+                BOOST_ASSERT(!(graph.GetEdgeData(forward_e1).reversed && graph.GetEdgeData(reverse_e1).reversed));
                 /*
                  * Remember Lane Data for compressed parts. This handles scenarios where lane-data
                  * is
